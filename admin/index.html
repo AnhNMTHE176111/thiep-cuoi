@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin — Thiệp cưới Ngọc Đức &amp; Hồng Thắm</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+  :root{
+    --nau:#8E7C69; --nau-nhat:#a08f7d; --nen:#f6f3f0; --vien:#e0d6c9; --trang:#fff;
+    --xanh:#3d7a5c; --do:#b5493f; --vang:#b7862c;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.5 -apple-system,"Segoe UI",Arial,sans-serif;background:var(--nen);color:#3a332c}
+  h1,h2,h3{margin:0 0 8px;font-weight:600}
+  .layout{display:grid;grid-template-columns:220px 1fr 360px;min-height:100vh}
+  .layout > main{min-width:0}
+  @media (max-width:1100px){ .layout{grid-template-columns:200px 1fr} .cot-xem{display:none} }
+  .cot-nav{background:var(--trang);border-right:1px solid var(--vien);padding:16px 0;overflow-y:auto}
+  .cot-nav .nhom{margin:16px 0 4px;padding:0 16px;font-size:11px;letter-spacing:.5px;color:var(--nau-nhat);text-transform:uppercase}
+  .cot-nav button{display:block;width:100%;text-align:left;padding:9px 16px;border:0;background:none;cursor:pointer;font-size:13.5px;color:#3a332c;border-left:3px solid transparent}
+  .cot-nav button:hover{background:var(--nen)}
+  .cot-nav button.active{background:var(--nen);border-left-color:var(--nau);font-weight:600;color:var(--nau)}
+  .cot-giua{padding:24px 32px 90px;overflow-y:auto}
+  .cum{max-width:640px}
+  .field{margin-bottom:16px}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--nau);margin-bottom:4px}
+  .field .goi-y{font-size:12px;color:var(--nau-nhat);margin-top:4px}
+  .field input[type=text],.field input[type=time],.field input[type=date],.field input[type=color],.field textarea,.field select{
+    width:100%;padding:9px 11px;border:1px solid var(--vien);border-radius:8px;font:inherit;background:var(--trang);color:inherit
+  }
+  .field textarea{min-height:64px;resize:vertical}
+  .field .canh-bao{color:var(--vang);font-size:12px;margin-top:4px;display:flex;gap:5px;align-items:start}
+  .field .loi{color:var(--do);font-size:12px;margin-top:4px}
+  .hang2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .hang3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .khung{border:1px solid var(--vien);border-radius:12px;padding:16px;background:var(--trang);margin-bottom:16px}
+  .khung h3{font-size:13px;color:var(--nau);display:flex;justify-content:space-between;align-items:center}
+  .nut{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:20px;border:1px solid var(--nau);background:var(--trang);color:var(--nau);font:inherit;font-weight:600;cursor:pointer;font-size:13px}
+  .nut:hover{background:var(--nen)}
+  .nut.chinh{background:var(--nau);color:#fff}
+  .nut.chinh:hover{opacity:.9}
+  .nut.nho{padding:5px 11px;font-size:12px;border-radius:14px}
+  .nut.nguy{border-color:var(--do);color:var(--do)}
+  .nut:disabled{opacity:.5;cursor:not-allowed}
+  .cong-tac{display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+  .cong-tac input{display:none}
+  .cong-tac .bi{width:36px;height:20px;border-radius:12px;background:#d7cdbe;position:relative;transition:.15s}
+  .cong-tac .bi::after{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;top:2px;left:2px;transition:.15s}
+  .cong-tac input:checked + .bi{background:var(--xanh)}
+  .cong-tac input:checked + .bi::after{left:18px}
+  table.ds{width:100%;border-collapse:collapse;font-size:13px}
+  table.ds th{text-align:left;font-size:11px;text-transform:uppercase;color:var(--nau-nhat);padding:6px 8px;border-bottom:1px solid var(--vien)}
+  table.ds td{padding:7px 8px;border-bottom:1px solid #f0ebe3;vertical-align:middle}
+  table.ds tr:hover td{background:#fbf9f6}
+  .the{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+  .the.trai{background:#e7eef7;color:#3a5f8a}
+  .the.gai{background:#fbe9ec;color:#a04a5a}
+  .thanh-tren{position:sticky;top:0;background:rgba(246,243,240,.92);backdrop-filter:blur(6px);padding:14px 32px;border-bottom:1px solid var(--vien);display:flex;justify-content:space-between;align-items:center;z-index:5}
+  .thanh-tren h2{font-size:16px}
+  .cot-xem{background:var(--trang);border-left:1px solid var(--vien);padding:16px;overflow-y:auto;display:flex;flex-direction:column}
+  .khung-dt{width:100%;max-width:300px;margin:0 auto;border:8px solid #2a2a2a;border-radius:32px;overflow:hidden;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+  .khung-dt iframe{width:100%;height:560px;border:0;display:block}
+  .chon-ban{display:flex;gap:8px;justify-content:center;margin:12px 0}
+  .chon-ban button{flex:1;padding:7px;border-radius:8px;border:1px solid var(--vien);background:var(--trang);cursor:pointer;font:inherit;font-size:12.5px}
+  .chon-ban button.active{background:var(--nau);color:#fff;border-color:var(--nau)}
+  .thanh-trang-thai{position:fixed;left:220px;right:360px;bottom:0;background:#2a2420;color:#fff;padding:10px 24px;display:flex;justify-content:space-between;align-items:center;font-size:13px;z-index:10}
+  @media (max-width:1100px){ .thanh-trang-thai{right:0} }
+  .thanh-trang-thai.sach{background:#3a332c}
+  .cham{width:7px;height:7px;border-radius:50%;background:var(--vang);display:inline-block;margin-right:6px}
+  .cham.sach{background:var(--xanh)}
+  .chip-mau{font-size:11px;padding:2px 7px;border-radius:8px;background:#fdf2d8;color:#8a6d1f;margin-left:6px}
+  a.link-nho{color:var(--nau);font-size:12px}
+  textarea.code{font-family:ui-monospace,Consolas,monospace;font-size:12px;min-height:220px;background:#faf8f5}
+  .hop-thong-bao{position:fixed;top:16px;right:16px;z-index:100;display:flex;flex-direction:column;gap:8px}
+  .thong-bao{background:#2a2420;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.2);max-width:340px}
+  .thong-bao.loi{background:#7a2e28}
+  .thong-bao.ok{background:#2e5c40}
+  .an{display:none !important}
+  .nhap-token{display:flex;gap:8px}
+  .nhap-token input{flex:1}
+  .muc-nho{font-size:12px;color:var(--nau-nhat)}
+  .khach-toolbar{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+  .drop-import{border:2px dashed var(--vien);border-radius:10px;padding:16px;text-align:center;color:var(--nau-nhat);font-size:12.5px;margin-bottom:12px}
+  .drop-import textarea{width:100%;min-height:90px;margin-top:8px}
+</style>
+</head>
+<body>
+
+<div class="hop-thong-bao" id="hopThongBao"></div>
+
+<div class="layout">
+  <nav class="cot-nav" id="cotNav"></nav>
+  <main>
+    <div class="thanh-tren">
+      <h2 id="tieuDeCum">Tổng quan</h2>
+      <div style="display:flex;gap:8px">
+        <button class="nut" id="nutXemLink" type="button">Mở link thiệp</button>
+      </div>
+    </div>
+    <div class="cot-giua" id="cotGiua"></div>
+  </main>
+  <aside class="cot-xem">
+    <div class="chon-ban">
+      <button id="chonTrai" class="active" type="button">Nhà trai</button>
+      <button id="chonGai" type="button">Nhà gái</button>
+    </div>
+    <div class="khung-dt"><iframe id="khungXem" title="Xem trước thiệp"></iframe></div>
+    <p class="muc-nho" style="text-align:center;margin-top:8px">Xem trước cập nhật theo dữ liệu đang sửa (chưa cần lưu)</p>
+  </aside>
+</div>
+
+<div class="thanh-trang-thai sach" id="thanhTrangThai">
+  <span><span class="cham sach" id="chamTrangThai"></span><span id="chuTrangThai">Chưa có thay đổi</span></span>
+  <span style="display:flex;gap:10px;align-items:center">
+    <span class="muc-nho" id="lanLuuCuoi"></span>
+    <button class="nut chinh" id="nutDang" type="button">Đăng lên link thật</button>
+  </span>
+</div>
+
+<script src="../sinh.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>

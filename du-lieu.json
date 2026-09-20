@@ -1,0 +1,95 @@
+{
+  "_ghiChu": "Nguon du lieu duy nhat cho 2 thiep. Sua qua admin/ (khuyen nghi) hoac sua tay file nay roi bam Dang trong admin de ap dung. Cac truong co _mau:true la gia tri MAU, chua duoc cap nhat that.",
+  "chung": {
+    "coDau": { "ten": "Hồng Thắm", "thuBac": "Trưởng nữ" },
+    "chuRe": { "ten": "Ngọc Đức", "thuBac": "Thứ nam" },
+    "monogram": "TĐ",
+    "nhaTrai": {
+      "ong": "Trương Công Trường",
+      "ba": "Đỗ Minh Ngọc",
+      "diaChi": "178D Trương Định, Hai Bà Trưng, Hà Nội"
+    },
+    "nhaGai": {
+      "ong": "Ngô Minh Hùng",
+      "ba": "Nguyễn Thị Duyên",
+      "diaChi": "Thôn Phương Cơ, Quảng Hợp, Thanh Hóa"
+    }
+  },
+  "diaDiem": {
+    "tu_gia_nha_gai": {
+      "ten": "TƯ GIA NHÀ GÁI",
+      "diaChi": "Số 03 - Ngõ 04, Thôn Phương Cơ<br>Quảng Hợp, Thanh Hoá",
+      "map": "https://www.google.com/maps/search/?api=1&query=Thon+Phuong+Co,+Quang+Hop,+Thanh+Hoa"
+    },
+    "tu_gia_nha_trai": {
+      "ten": "TƯ GIA NHÀ TRAI",
+      "diaChi": "178D Trương Định<br>Hai Bà Trưng, Hà Nội",
+      "map": "https://www.google.com/maps/search/?api=1&query=178D+Truong+Dinh,+Hai+Ba+Trung,+Ha+Noi"
+    },
+    "star_galaxy": {
+      "ten": "STAR GALAXY",
+      "diaChi": "Trung tâm tiệc cưới · Tầng 4<br>87 Láng Hạ, Ba Đình, Hà Nội",
+      "map": "https://www.google.com/maps/search/?api=1&query=Trung+tam+tiec+cuoi+Star+Galaxy+87+Lang+Ha+Ba+Dinh+Ha+Noi"
+    }
+  },
+  "suKien": [
+    { "ma": "le_nap_tai", "ten": "LỄ NẠP TÀI", "ngayDuong": "2026-10-25", "gio": "08:00", "_mau": false, "diaDiemMa": "tu_gia_nha_gai" },
+    { "ma": "bua_com_than_mat", "ten": "BỮA CƠM THÂN MẬT", "ngayDuong": "2026-10-28", "gio": "18:00", "_mau": true, "diaDiemMa": "tu_gia_nha_gai" },
+    { "ma": "hon_le_tu_gia_trai", "ten": "HÔN LỄ TẠI TƯ GIA", "ngayDuong": "2026-10-29", "gio": "09:00", "_mau": true, "diaDiemMa": "tu_gia_nha_trai" },
+    { "ma": "le_thanh_hon", "ten": "LỄ THÀNH HÔN", "ngayDuong": "2026-10-29", "gio": "17:30", "_mau": false, "diaDiemMa": "star_galaxy" }
+  ],
+  "ban": {
+    "nha_trai": {
+      "thuTuTen": "chu_re_truoc",
+      "suKienChinhMa": "le_thanh_hon",
+      "demNguocSuKienMa": "le_thanh_hon",
+      "loiMoi": "ĐẾN DỰ BỮA TIỆC CHUNG VUI CÙNG<br>GIA ĐÌNH CHÚNG TÔI",
+      "chuongTrinh": [
+        { "suKienMa": "hon_le_tu_gia_trai", "nhan": "HÔN LỄ TẠI TƯ GIA", "icon": "may_anh" },
+        { "suKienMa": "le_thanh_hon", "nhan": "LỄ THÀNH HÔN", "icon": "nhan" },
+        { "suKienMa": null, "gioRieng": "--:--", "nhan": "CHUNG VUI KHAI TIỆC", "icon": "khai_tiec" },
+        { "suKienMa": null, "gioRieng": "--:--", "nhan": "TUNG HOA CƯỚI", "icon": "hoa_cuoi" }
+      ],
+      "dresscode": {
+        "bat": true,
+        "mau": [
+          { "ten": "Kem", "hex": "#F5EDE1", "_mau": true },
+          { "ten": "Be", "hex": "#D8C4A8", "_mau": true },
+          { "ten": "Nâu", "hex": "#8E7C69", "_mau": true },
+          { "ten": "Hồng", "hex": "#E8B4B8", "_mau": true }
+        ]
+      }
+    },
+    "nha_gai": {
+      "thuTuTen": "co_dau_truoc",
+      "suKienChinhMa": "bua_com_than_mat",
+      "demNguocSuKienMa": "le_thanh_hon",
+      "loiMoi": "TỚI DỰ BỮA CƠM THÂN MẬT<br>CHUNG VUI CÙNG GIA ĐÌNH CHÚNG TÔI",
+      "chuongTrinh": [
+        { "suKienMa": "le_nap_tai", "nhan": "LỄ NẠP TÀI · 25.10", "icon": "nhan" },
+        { "suKienMa": "bua_com_than_mat", "nhan": "BỮA CƠM THÂN MẬT · 28.10", "icon": "khai_tiec" },
+        { "suKienMa": "le_thanh_hon", "nhan": "LỄ THÀNH HÔN · 29.10", "icon": "hoa_cuoi" },
+        { "suKienMa": null, "gioRieng": "--:--", "nhan": "CHUNG VUI KHAI TIỆC", "icon": "may_anh" }
+      ],
+      "dresscode": { "bat": false, "mau": [] }
+    }
+  },
+  "anh": {
+    "A_codau": { "url": "https://w.ladicdn.com/691804d3a89f3900120ca482/8b579878af335974957df73076695524-20260703143934-7813x.jpg", "ghiChu": "Cô dâu quay lưng, ảnh dọc" },
+    "B_tay":   { "url": "https://w.ladicdn.com/691804d3a89f3900120ca482/222da267-cd8e-45f4-b931-e5fe04678e15-20260703144213-lqe6i.png", "ghiChu": "Nắm tay, ảnh ngang" },
+    "C_bong":  { "url": "https://w.ladicdn.com/691804d3a89f3900120ca482/0b5f0642-cb5b-42b5-bbac-535a7444ed8b-20260704011648-3nmfq.png", "ghiChu": "Bóng hai người trên cỏ, ảnh dọc" },
+    "D_nhan":  { "url": "https://w.ladicdn.com/691804d3a89f3900120ca482/2aoboqhy3afvi4u9ri9jgweyv18favwspxyt9ob2-20260704010848-lmzrt.jpg", "ghiChu": "Nhẫn trong hộp, ảnh dọc" }
+  },
+  "nhan": {
+    "chuongTrinhTieuDe": "CHƯƠNG TRÌNH"
+  },
+  "nhac": {
+    "url": "https://files.catbox.moe/d52d6q.mp3",
+    "tuPhat": true
+  },
+  "rsvp": {
+    "googleScriptUrl": "",
+    "_huongDan": "Dan URL Google Apps Script Web App vao day de nhan phan hoi RSVP ve Google Sheet. Xem huong dan trong admin > Cai dat > RSVP."
+  },
+  "khach": []
+}
