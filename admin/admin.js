@@ -3,6 +3,26 @@
 (function () {
   'use strict';
 
+  // ---------- cong vao bang prompt username/password ----------
+  // Chi la lop chan co ban (file JS tinh, xem View Source la doc duoc mat khau) —
+  // du de tranh nguoi la tinh co vao nham link admin, KHONG phai bao mat that su.
+  (function congVao() {
+    if (sessionStorage.getItem('thiep_admin_da_vao') === '1') return;
+    var TAI_KHOAN = ['tuananh', 'tham', 'duc'];
+    var MAT_KHAU = 'abc123';
+    for (var lan = 0; lan < 3; lan++) {
+      var tk = (window.prompt('Tên đăng nhập:') || '').trim().toLowerCase();
+      var mk = window.prompt('Mật khẩu:') || '';
+      if (TAI_KHOAN.indexOf(tk) >= 0 && mk === MAT_KHAU) {
+        sessionStorage.setItem('thiep_admin_da_vao', '1');
+        return;
+      }
+      window.alert('Sai tên đăng nhập hoặc mật khẩu.');
+    }
+    document.body.innerHTML = '<div style="padding:60px 24px;text-align:center;font:16px -apple-system,Arial,sans-serif;color:#8E7C69">Không có quyền truy cập trang này.</div>';
+    throw new Error('Chua dang nhap');
+  })();
+
   var GH_MAC_DINH = { owner: 'AnhNMTHE176111', repo: 'thiep-cuoi', branch: 'main' };
   var DA_SUA = false;
   var DANG_TAI_BAN_DAU = true;
