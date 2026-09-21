@@ -11,25 +11,37 @@
     --xanh:#3d7a5c; --do:#b5493f; --vang:#b7862c;
   }
   *{box-sizing:border-box}
-  body{margin:0;font:14px/1.5 -apple-system,"Segoe UI",Arial,sans-serif;background:var(--nen);color:#3a332c}
+  /* BUG-04: khoa chieu cao trang, chi cot giua duoc cuon.
+     grid-template-rows:minmax(0,1fr) la phan bat buoc: khong co no, hang grid mac dinh
+     "auto" se phinh cao theo noi dung dai nhat ben trong (grid blowout) va keo ca trang
+     cuon theo, du .layout da duoc flex ep cao bang man hinh. */
+  html,body{height:100%;overflow:hidden}
+  body{margin:0;font:14px/1.5 -apple-system,"Segoe UI",Arial,sans-serif;background:var(--nen);color:#3a332c;display:flex;flex-direction:column}
   h1,h2,h3{margin:0 0 8px;font-weight:600}
-  .layout{display:grid;grid-template-columns:220px 1fr 360px;min-height:100vh}
-  .layout > main{min-width:0}
-  @media (max-width:1100px){ .layout{grid-template-columns:200px 1fr} .cot-xem{display:none} }
-  .cot-nav{background:var(--trang);border-right:1px solid var(--vien);padding:16px 0;overflow-y:auto}
+  .layout{display:grid;grid-template-columns:220px 1fr 380px;grid-template-rows:minmax(0,1fr);flex:1;min-height:0}
+  .layout > main{min-width:0;display:flex;flex-direction:column;min-height:0}
+  .cot-nav{background:var(--trang);border-right:1px solid var(--vien);padding:16px 0;overflow-y:auto;min-height:0}
   .cot-nav .nhom{margin:16px 0 4px;padding:0 16px;font-size:11px;letter-spacing:.5px;color:var(--nau-nhat);text-transform:uppercase}
   .cot-nav button{display:block;width:100%;text-align:left;padding:9px 16px;border:0;background:none;cursor:pointer;font-size:13.5px;color:#3a332c;border-left:3px solid transparent}
   .cot-nav button:hover{background:var(--nen)}
   .cot-nav button.active{background:var(--nen);border-left-color:var(--nau);font-weight:600;color:var(--nau)}
-  .cot-giua{padding:24px 32px 90px;overflow-y:auto}
+  .cot-giua{padding:24px 32px 40px;overflow-y:auto;flex:1;min-height:0}
   .cum{max-width:640px}
   .field{margin-bottom:16px}
   .field label{display:block;font-size:12.5px;font-weight:600;color:var(--nau);margin-bottom:4px}
   .field .goi-y{font-size:12px;color:var(--nau-nhat);margin-top:4px}
-  .field input[type=text],.field input[type=time],.field input[type=date],.field input[type=color],.field textarea,.field select{
+  .field input[type=text],.field input[type=time],.field input[type=date],.field input[type=file],.field textarea,.field select{
     width:100%;padding:9px 11px;border:1px solid var(--vien);border-radius:8px;font:inherit;background:var(--trang);color:inherit
   }
   .field textarea{min-height:64px;resize:vertical}
+  /* BUG-03: o chon mau phai la mot o vuong to ro, khong dung chung padding voi input text */
+  .o-mau{display:flex;gap:10px;align-items:center}
+  .o-mau input[type=color]{width:44px;height:44px;flex:0 0 44px;padding:2px;border:1px solid #b9ab97;
+    border-radius:10px;background:var(--trang);cursor:pointer;-webkit-appearance:none;appearance:none}
+  .o-mau input[type=color]::-webkit-color-swatch{border:0;border-radius:7px}
+  .o-mau input[type=color]::-webkit-color-swatch-wrapper{padding:0}
+  .o-mau input[type=color]::-moz-color-swatch{border:0;border-radius:7px}
+  .o-mau input[type=text]{flex:1;font-family:ui-monospace,Consolas,monospace;text-transform:uppercase}
   .field .canh-bao{color:var(--vang);font-size:12px;margin-top:4px;display:flex;gap:5px;align-items:start}
   .field .loi{color:var(--do);font-size:12px;margin-top:4px}
   .hang2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -58,14 +70,17 @@
   .the.gai{background:#fbe9ec;color:#a04a5a}
   .thanh-tren{position:sticky;top:0;background:rgba(246,243,240,.92);backdrop-filter:blur(6px);padding:14px 32px;border-bottom:1px solid var(--vien);display:flex;justify-content:space-between;align-items:center;z-index:5}
   .thanh-tren h2{font-size:16px}
-  .cot-xem{background:var(--trang);border-left:1px solid var(--vien);padding:16px;overflow-y:auto;display:flex;flex-direction:column}
-  .khung-dt{width:100%;max-width:300px;margin:0 auto;border:8px solid #2a2a2a;border-radius:32px;overflow:hidden;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.15)}
-  .khung-dt iframe{width:100%;height:560px;border:0;display:block}
-  .chon-ban{display:flex;gap:8px;justify-content:center;margin:12px 0}
+  /* BUG-01: thiep la layout tuyet doi khô cung 420px -> KHONG the co gian.
+     Cho iframe dung 420px roi transform:scale() thu nho vua khung dien thoai. */
+  .cot-xem{background:var(--trang);border-left:1px solid var(--vien);padding:12px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+  .khung-dt{width:100%;align-self:stretch;margin:0 auto;border:8px solid #2a2a2a;border-radius:28px;overflow:hidden;
+    background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.15);flex:1 1 auto;min-height:0;position:relative}
+  .khung-dt .boc-scale{position:absolute;inset:0;overflow:hidden}
+  .khung-dt iframe{width:420px;border:0;display:block;transform-origin:top left;background:#fff}
+  .chon-ban{display:flex;gap:8px;justify-content:center;margin:0 0 10px}
   .chon-ban button{flex:1;padding:7px;border-radius:8px;border:1px solid var(--vien);background:var(--trang);cursor:pointer;font:inherit;font-size:12.5px}
   .chon-ban button.active{background:var(--nau);color:#fff;border-color:var(--nau)}
-  .thanh-trang-thai{position:fixed;left:220px;right:360px;bottom:0;background:#2a2420;color:#fff;padding:10px 24px;display:flex;justify-content:space-between;align-items:center;font-size:13px;z-index:10}
-  @media (max-width:1100px){ .thanh-trang-thai{right:0} }
+  .thanh-trang-thai{flex:0 0 auto;background:#2a2420;color:#fff;padding:10px 24px;display:flex;justify-content:space-between;align-items:center;font-size:13px;gap:12px;flex-wrap:wrap}
   .thanh-trang-thai.sach{background:#3a332c}
   .cham{width:7px;height:7px;border-radius:50%;background:var(--vang);display:inline-block;margin-right:6px}
   .cham.sach{background:var(--xanh)}
@@ -83,6 +98,16 @@
   .khach-toolbar{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
   .drop-import{border:2px dashed var(--vien);border-radius:10px;padding:16px;text-align:center;color:var(--nau-nhat);font-size:12.5px;margin-bottom:12px}
   .drop-import textarea{width:100%;min-height:90px;margin-top:8px}
+  .hang-nut{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+  .canh-bao-do{color:var(--do);font-size:12.5px;margin-top:6px}
+  .o-tai-len{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+  .o-tai-len input[type=file]{font-size:12px;max-width:220px}
+  .trang-thai-tai{font-size:12px;color:var(--nau-nhat)}
+  /* BUG-10: media query phai nam CUOI file, neu khong rule sau se de len .cot-xem{display:flex} */
+  @media (max-width:1100px){
+    .layout{grid-template-columns:200px 1fr}
+    .cot-xem{display:none !important}
+  }
 </style>
 </head>
 <body>
@@ -105,8 +130,8 @@
       <button id="chonTrai" class="active" type="button">Nhà trai</button>
       <button id="chonGai" type="button">Nhà gái</button>
     </div>
-    <div class="khung-dt"><iframe id="khungXem" title="Xem trước thiệp"></iframe></div>
-    <p class="muc-nho" style="text-align:center;margin-top:8px">Xem trước cập nhật theo dữ liệu đang sửa (chưa cần lưu)</p>
+    <div class="khung-dt" id="khungDT"><div class="boc-scale"><iframe id="khungXem" title="Xem trước thiệp" allow=""></iframe></div></div>
+    <p class="muc-nho" style="text-align:center;margin:8px 0 0">Xem trước theo dữ liệu đang sửa (đã tắt nhạc) — chưa cần lưu</p>
   </aside>
 </div>
 
