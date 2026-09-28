@@ -190,7 +190,8 @@
   function ghGetSha(path) {
     var c = ghCauHinh();
     var url = 'https://api.github.com/repos/' + c.owner + '/' + c.repo + '/contents/' + path + '?ref=' + c.branch;
-    return fetch(url, { headers: { Authorization: 'token ' + c.token, Accept: 'application/vnd.github+json' } })
+    // no-store: GitHub tra Cache-Control max-age=60 -> trinh duyet dung lai sha cu sau lan dang truoc
+    return fetch(url, { cache: 'no-store', headers: { Authorization: 'token ' + c.token, Accept: 'application/vnd.github+json' } })
       .then(function (r) { if (r.status === 404) return null; if (!r.ok) throw new Error('GET ' + path + ': HTTP ' + r.status); return r.json(); })
       .then(function (j) { return j ? j.sha : null; });
   }
@@ -1403,11 +1404,12 @@
     var nut = document.getElementById('nutDang');
     nut.disabled = true; nut.textContent = 'Đang đăng...';
     var luc = new Date().toLocaleString('vi-VN');
-    Promise.all([
-      ghPutFile('du-lieu.json', JSON.stringify(duLieu, null, 2), 'Cap nhat du lieu tu admin - ' + luc),
-      ghPutFile('nha-trai/index.html', traiHtml, 'Sinh lai thiep nha trai tu admin - ' + luc),
-      ghPutFile('nha-gai/index.html', gaiHtml, 'Sinh lai thiep nha gai tu admin - ' + luc),
-    ]).then(function () {
+    // Tung file mot: moi PUT la 1 commit tren cung nhanh, chay song song thi GitHub
+    // tu choi commit den sau ("is at ... but expected ...").
+    ghPutFile('du-lieu.json', JSON.stringify(duLieu, null, 2), 'Cap nhat du lieu tu admin - ' + luc)
+      .then(function () { return ghPutFile('nha-trai/index.html', traiHtml, 'Sinh lai thiep nha trai tu admin - ' + luc); })
+      .then(function () { return ghPutFile('nha-gai/index.html', gaiHtml, 'Sinh lai thiep nha gai tu admin - ' + luc); })
+      .then(function () {
       DA_SUA = false;
       lanDangCuoi = luc;
       try { localStorage.setItem('thiep_lan_dang_cuoi', luc); } catch (e) {}
