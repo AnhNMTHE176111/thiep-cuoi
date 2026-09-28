@@ -351,6 +351,7 @@
   // ---------- dinh nghia cac cum ----------
   var CAC_CUM = [
     { nhom: '', id: 'tong-quan', ten: 'Tổng quan' },
+    { nhom: '', id: 'khach-moi', ten: 'Khách mời' },
     { nhom: 'Thông tin chung', id: 'co-dau-chu-re', ten: 'Cô dâu · Chú rể' },
     { nhom: 'Thông tin chung', id: 'nha-trai-chung', ten: 'Nhà trai' },
     { nhom: 'Thông tin chung', id: 'nha-gai-chung', ten: 'Nhà gái' },
@@ -363,7 +364,6 @@
     { nhom: 'Thiệp nhà gái', id: 'gai-chuong-trinh', ten: 'Chương trình' },
     { nhom: 'Thiệp nhà gái', id: 'gai-dresscode', ten: 'Dresscode' },
     { nhom: '', id: 'anh-nhac', ten: 'Ảnh & nhạc' },
-    { nhom: '', id: 'khach-moi', ten: 'Khách mời' },
     { nhom: '', id: 'cai-dat', ten: 'Cài đặt' },
   ];
 
