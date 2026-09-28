@@ -226,7 +226,7 @@
     "tuPhat": true
   },
   "rsvp": {
-    "googleScriptUrl": "",
+    "googleScriptUrl": "https://script.google.com/macros/s/AKfycbwm6z-Aoi0ZunohGss-Uysgw4F9c3pTzqwHOLRHmdXjhr5rfnMD9NbH3bKvqdwsKTPQhA/exec",
     "_huongDan": "Dan URL Google Apps Script Web App vao day. Dung chung cho ca RSVP LAN danh sach khach moi (khach moi khong con luu trong file nay nua - xem admin > Cai dat)."
   }
 }
