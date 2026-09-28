@@ -35,7 +35,7 @@
   "suKien": [
     { "ma": "le_nap_tai", "ten": "LỄ NẠP TÀI", "ngayDuong": "2026-10-25", "gio": "08:00", "_mau": false, "diaDiemMa": "tu_gia_nha_gai" },
     { "ma": "bua_com_than_mat", "ten": "BỮA CƠM THÂN MẬT", "ngayDuong": "2026-10-28", "gio": "18:00", "_mau": true, "diaDiemMa": "tu_gia_nha_gai" },
-    { "ma": "hon_le_tu_gia_trai", "ten": "HÔN LỄ TẠI TƯ GIA", "ngayDuong": "2026-10-29", "gio": "09:00", "_mau": true, "diaDiemMa": "tu_gia_nha_trai" },
+    { "ma": "hon_le_tu_gia_trai", "ten": "CHECK IN CHỤP ẢNH", "ngayDuong": "2026-10-29", "gio": "16:30", "_mau": false, "diaDiemMa": "tu_gia_nha_trai" },
     { "ma": "le_thanh_hon", "ten": "LỄ THÀNH HÔN", "ngayDuong": "2026-10-29", "gio": "17:30", "_mau": false, "diaDiemMa": "star_galaxy" }
   ],
   "ban": {
@@ -45,9 +45,9 @@
       "demNguocSuKienMa": "le_thanh_hon",
       "loiMoi": "ĐẾN DỰ BỮA TIỆC CHUNG VUI CÙNG<br>GIA ĐÌNH CHÚNG TÔI",
       "chuongTrinh": [
-        { "suKienMa": "hon_le_tu_gia_trai", "nhan": "HÔN LỄ TẠI TƯ GIA", "icon": "may_anh" },
+        { "suKienMa": "hon_le_tu_gia_trai", "nhan": "CHECK IN CHỤP ẢNH", "icon": "may_anh" },
         { "suKienMa": "le_thanh_hon", "nhan": "LỄ THÀNH HÔN", "icon": "nhan" },
-        { "suKienMa": null, "gioRieng": "--:--", "nhan": "CHUNG VUI KHAI TIỆC", "icon": "khai_tiec" },
+        { "suKienMa": null, "gioRieng": "18:00", "nhan": "CHUNG VUI KHAI TIỆC", "icon": "khai_tiec" },
         { "suKienMa": null, "gioRieng": "--:--", "nhan": "TUNG HOA CƯỚI", "icon": "hoa_cuoi" }
       ],
       "dresscode": {
@@ -66,30 +66,42 @@
       "demNguocSuKienMa": "le_thanh_hon",
       "loiMoi": "TỚI DỰ BỮA CƠM THÂN MẬT<br>CHUNG VUI CÙNG GIA ĐÌNH CHÚNG TÔI",
       "chuongTrinh": [
-        { "suKienMa": "le_nap_tai", "nhan": "LỄ NẠP TÀI · 25.10", "icon": "nhan" },
-        { "suKienMa": "bua_com_than_mat", "nhan": "BỮA CƠM THÂN MẬT · 28.10", "icon": "khai_tiec" },
-        { "suKienMa": "le_thanh_hon", "nhan": "LỄ THÀNH HÔN · 29.10", "icon": "hoa_cuoi" },
+        { "suKienMa": null, "gioRieng": "25.10", "nhan": "LỄ NẠP TÀI", "icon": "nhan" },
+        { "suKienMa": null, "gioRieng": "28.10", "nhan": "BỮA CƠM THÂN MẬT", "icon": "khai_tiec" },
+        { "suKienMa": null, "gioRieng": "29.10", "nhan": "LỄ THÀNH HÔN", "icon": "hoa_cuoi" },
         { "suKienMa": null, "gioRieng": "--:--", "nhan": "CHUNG VUI KHAI TIỆC", "icon": "may_anh" }
       ],
-      "dresscode": { "bat": false, "mau": [] }
+      "dresscode": {
+        "bat": true,
+        "mau": [
+          { "ten": "Kem", "hex": "#F5EDE1", "_mau": true },
+          { "ten": "Be", "hex": "#D8C4A8", "_mau": true },
+          { "ten": "Nâu", "hex": "#8E7C69", "_mau": true },
+          { "ten": "Hồng", "hex": "#E8B4B8", "_mau": true }
+        ]
+      }
     }
   },
   "anh": {
-    "A_codau": { "url": "https://w.ladicdn.com/691804d3a89f3900120ca482/8b579878af335974957df73076695524-20260703143934-7813x.jpg", "ghiChu": "Cô dâu quay lưng, ảnh dọc" },
-    "B_tay":   { "url": "https://w.ladicdn.com/691804d3a89f3900120ca482/222da267-cd8e-45f4-b931-e5fe04678e15-20260703144213-lqe6i.png", "ghiChu": "Nắm tay, ảnh ngang" },
-    "C_bong":  { "url": "https://w.ladicdn.com/691804d3a89f3900120ca482/0b5f0642-cb5b-42b5-bbac-535a7444ed8b-20260704011648-3nmfq.png", "ghiChu": "Bóng hai người trên cỏ, ảnh dọc" },
-    "D_nhan":  { "url": "https://w.ladicdn.com/691804d3a89f3900120ca482/2aoboqhy3afvi4u9ri9jgweyv18favwspxyt9ob2-20260704010848-lmzrt.jpg", "ghiChu": "Nhẫn trong hộp, ảnh dọc" }
+    "bia_codau":     { "url": "../anh/bia_codau_cua_so.jpg", "ghiChu": "Bìa – khung dọc lớn: cô dâu quay lưng bên cửa sổ (ảnh dọc, cũng là ảnh xem trước khi gửi link)" },
+    "bia_tay_hoa":   { "url": "../anh/bia_tay_hoa.jpg", "ghiChu": "Bìa – ô vuông nhỏ: tay nắm tay cầm hoa" },
+    "forever":       { "url": "../anh/forever_nam_tay.jpg", "ghiChu": "Mục Forever: hai người nắm tay đi dạo (ảnh dọc)" },
+    "timeline":      { "url": "../anh/timeline_bong.jpg", "ghiChu": "Ảnh lớn tràn ngang trên mục Timeline: bóng đổ hai người (ảnh dọc)" },
+    "demlui_trai":   { "url": "../anh/demlui_codau_hoa.jpg", "ghiChu": "Mục Đếm lùi – khung trái: cô dâu ngoái lại cầm hoa (ảnh dọc)" },
+    "demlui_phai":   { "url": "../anh/demlui_tay_ren.jpg", "ghiChu": "Mục Đếm lùi – khung phải: cận tay nắm tay, váy ren" },
+    "camon":         { "url": "../anh/camon_xoay_voan.jpg", "ghiChu": "Popup cảm ơn sau khi gửi xác nhận: hai người xoay, voan bay (ảnh ngang)" }
   },
   "nhan": {
-    "chuongTrinhTieuDe": "CHƯƠNG TRÌNH"
+    "lichTrinhTieuDe": "Timeline",
+    "chuongTrinhTieuDe": "CHƯƠNG TRÌNH TIỆC CƯỚI",
+    "trangPhucTieuDe": "Dresscode"
   },
   "nhac": {
-    "url": "https://files.catbox.moe/d52d6q.mp3",
+    "url": "../nhac/nhac-nen.mp3",
     "tuPhat": true
   },
   "rsvp": {
     "googleScriptUrl": "",
-    "_huongDan": "Dan URL Google Apps Script Web App vao day de nhan phan hoi RSVP ve Google Sheet. Xem huong dan trong admin > Cai dat > RSVP."
-  },
-  "khach": []
+    "_huongDan": "Dan URL Google Apps Script Web App vao day. Dung chung cho ca RSVP LAN danh sach khach moi (khach moi khong con luu trong file nay nua - xem admin > Cai dat)."
+  }
 }
