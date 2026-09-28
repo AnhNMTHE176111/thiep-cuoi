@@ -1,5 +1,8 @@
 // Admin thiep cuoi — thuan JS, khong build tool.
-// Doc/ghi du-lieu.json + khach.json + 2 file thiep ngay trong repo dang host qua GitHub Contents API.
+// Doc/ghi du-lieu.json + 2 file thiep ngay trong repo dang host qua GitHub Contents API.
+// Rieng danh sach KHACH MOI khong con nam trong repo nua — luu tren 1 Google Sheet, doc/ghi
+// qua Apps Script Web App (xem rsvp-google-apps-script.js). Nho vay them/sua/xoa khach co
+// hieu luc NGAY, khong can bam "Dang len link that" (xem cac ham *KhachSheet ben duoi).
 (function () {
   'use strict';
 
@@ -42,9 +45,17 @@
     if (!/\/$/.test(v)) v += '/';
     return v;
   }
-  function linkThiep(ma, maKhach) {
+  // BUG-30: ten khach nam THANG trong link (?n=...) de thiep hien duoc NGAY LAP TUC,
+  // khong phai cho Google Sheet tra loi. Ma hoa base64url (khong dung +/=, an toan trong URL).
+  function b64UrlEncodeUtf8(str) {
+    return btoa(unescape(encodeURIComponent(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  function linkThiep(ma, maKhach, hienThi) {
     var thuMuc = ma === 'nha_trai' ? 'nha-trai' : 'nha-gai';
-    return gocThiep() + thuMuc + '/' + (maKhach ? '?k=' + encodeURIComponent(maKhach) : '');
+    if (!maKhach) return gocThiep() + thuMuc + '/';
+    var q = 'k=' + encodeURIComponent(maKhach);
+    if (hienThi) q += '&n=' + b64UrlEncodeUtf8(hienThi);
+    return gocThiep() + thuMuc + '/?' + q;
   }
 
   // ---------- tien ich chung ----------
@@ -71,13 +82,15 @@
     return e;
   }
   // ---------- BUG-08: luu nhap vao localStorage sau moi thay doi ----------
+  // Chi luu duLieu (noi dung thiep). Danh sach khach KHONG con la "nhap chua dang" nua —
+  // moi thay doi ve khach ghi thang len Google Sheet ngay khi bam, xem *KhachSheet ben duoi.
   var luuNhapTimer = null;
   function luuNhap() {
     clearTimeout(luuNhapTimer);
     luuNhapTimer = setTimeout(function () {
       try {
         localStorage.setItem(KHOA_NHAP, JSON.stringify({
-          luc: new Date().toISOString(), duLieu: duLieu, khach: khach,
+          luc: new Date().toISOString(), duLieu: duLieu,
         }));
       } catch (e) { console.warn('Khong luu duoc ban nhap:', e); }
     }, 400);
@@ -151,7 +164,11 @@
   }
   function taoMaKhach() {
     var s = '';
-    do { s = Math.random().toString(36).slice(2, 8); } while (khach.some(function (k) { return k.ma === s; }));
+    // bat dau bang chu cai -> Google Sheet khong tu doi thanh so (vd "012345", "12e456")
+    var CHU = 'abcdefghijkmnpqrstuvwxyz';
+    do {
+      s = CHU.charAt(Math.floor(Math.random() * CHU.length)) + Math.random().toString(36).slice(2, 7);
+    } while (s.length < 6 || khach.some(function (k) { return k.ma === s; }));
     return s;
   }
 
@@ -216,6 +233,62 @@
     });
   }
 
+  // ---------- Google Sheet: danh sach khach + kiem tra ket noi ----------
+  // Dung chung 1 URL Apps Script Web App voi RSVP (rsvp.googleScriptUrl trong du-lieu.json).
+  // KHONG co khoa/mat khau — ai co URL cung goi duoc (chap nhan duoc, xem ghi chu dau
+  // rsvp-google-apps-script.js). Content-Type PHAI la text/plain de trinh duyet KHONG
+  // gui preflight OPTIONS truoc (Apps Script khong xu ly OPTIONS -> se loi CORS).
+  function urlKhach() {
+    return ((duLieu && duLieu.rsvp && duLieu.rsvp.googleScriptUrl) || '').trim();
+  }
+  // loi mang cua trinh duyet ("Failed to fetch", "Load failed" tren Safari) -> cau de hieu
+  function loiMangDeHieu(e) {
+    if (e && e.name === 'TypeError') return new Error('Không kết nối được Google Sheet — kiểm tra mạng rồi thử lại.');
+    return e;
+  }
+  function goiKhachApiGet(query) {
+    var u = urlKhach();
+    if (!u) return Promise.reject(new Error('Chưa nối Google Sheet — vào Cài đặt để dán URL trước.'));
+    return fetch(u + (u.indexOf('?') >= 0 ? '&' : '?') + query)
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (kq) { if (!kq || kq.ok === false) throw new Error((kq && kq.loi) || 'Sheet báo lỗi không rõ.'); return kq; }, function (e) { throw loiMangDeHieu(e); });
+  }
+  function goiKhachApiPost(body) {
+    var u = urlKhach();
+    if (!u) return Promise.reject(new Error('Chưa nối Google Sheet — vào Cài đặt để dán URL trước.'));
+    return fetch(u, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(body),
+    })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (kq) { if (!kq || kq.ok === false) throw new Error((kq && kq.loi) || 'Sheet báo lỗi không rõ.'); return kq; }, function (e) { throw loiMangDeHieu(e); });
+  }
+  function taiKhachTuSheet() {
+    return goiKhachApiGet('action=ds').then(function (kq) {
+      khach = kq.khach || [];
+      return khach;
+    });
+  }
+  // gui 1 hoac nhieu khach (them moi hoac sua) -> Sheet tra ve DANH SACH DA CAP NHAT
+  // (khach ma rong duoc Sheet gan ma that) -> gan lai vao bien `khach` de dong bo.
+  function luuKhachLenSheet(dsGui) {
+    return goiKhachApiPost({ action: 'luu', khach: dsGui }).then(function (kq) {
+      khach = kq.khach || khach;
+      return khach;
+    });
+  }
+  function xoaKhachTrenSheet(ma) {
+    return goiKhachApiPost({ action: 'xoa', ma: ma }).then(function () {
+      khach = khach.filter(function (k) { return k.ma !== ma; });
+      return khach;
+    });
+  }
+  function kiemTraKetNoiKhach() {
+    if (!urlKhach()) return Promise.reject(new Error('Chưa dán URL Google Apps Script ở ô bên trên.'));
+    return taiKhachTuSheet().then(function (ds) { return { soKhach: ds.length }; });
+  }
+
   // ---------- sinh preview / file cuoi ----------
   function sinhBan(ma, opts) {
     return SinhThiep.sinh(gocHtml, duLieu, ma, opts);
@@ -251,7 +324,7 @@
     var kq;
     try {
       // BUG-05 + BUG-21: ban xem truoc khong co nhac, khong co script form cua LadiPage
-      kq = sinhBan(banXem, { xemTruoc: true, khach: khach });
+      kq = sinhBan(banXem, { xemTruoc: true });
     } catch (e) {
       console.error('loi ve xem truoc', e);
       thongBao('Không dựng được xem trước: ' + e.message, 'loi');
@@ -490,13 +563,15 @@
     });
     cum.appendChild(khung);
 
-    var chuaDang = khach.filter(function (k) { return !k.daDang; }).length;
-    var khung2 = el('div', { class: 'khung' }, [
-      el('h3', {}, ['Số khách đã tạo link riêng']),
-      el('p', {}, [String(khach.length) + ' khách' + (chuaDang ? ' — trong đó ' + chuaDang + ' khách CHƯA đăng lên link thật' : '')]),
-    ]);
-    if (chuaDang) {
-      khung2.appendChild(el('p', { class: 'canh-bao' }, ['⚠️ Link của khách chưa đăng sẽ chỉ hiện "Quý Khách". Bấm "Đăng lên link thật" trước khi gửi.']));
+    var khung2 = el('div', { class: 'khung' }, [el('h3', {}, ['Khách mời'])]);
+    if (!urlKhach()) {
+      khung2.appendChild(el('p', { class: 'canh-bao' }, ['⚠️ Chưa nối Google Sheet — vào cụm "Khách mời" hoặc "Cài đặt" để nối trước khi thêm khách.']));
+    } else {
+      var daGui = khach.filter(function (k) { return k.daGui; }).length;
+      var denDu = khach.filter(function (k) { return trangThaiKhach(k) === 'den'; }).length;
+      khung2.appendChild(el('p', {}, [
+        String(khach.length) + ' khách · đã gửi ' + daGui + (denDu ? ' · xác nhận đi ' + denDu : ''),
+      ]));
     }
     cum.appendChild(khung2);
   }
@@ -862,65 +937,233 @@
   }
 
   // ---------- khach moi ----------
-  // BUG-06: khach moi them chi nam trong RAM tab admin. Link ?k=... chi hoat dong
-  // SAU KHI bam "Dang len link that" (luc do khach.json + 2 file thiep moi duoc ghi len repo).
-  // Vi vay moi khach co co `daDang`; nut Chep/link canh bao ro neu chua dang.
+  // Danh sach khach song tren Google Sheet (xem cac ham *KhachSheet o tren). Moi thao tac
+  // (them/sua/xoa) goi thang len Sheet va co hieu luc NGAY — khong con khai niem
+  // "chưa đăng lên link thật" nhu ban cu (BUG-06 cu). Link ca nhan hoa mang san ten trong
+  // chinh no (?n=...) nen luon dung tu luc gui, khong phu thuoc thiep da "Dang" hay chua.
   var KHUNG_TEN_KHACH = 279; // be ngang khung #HEADLINE15 tren thiep
   var CO_TEN_KHACH = 28;
 
-  function khachChuaDang() {
-    return khach.filter(function (k) { return !k.daDang; });
+  var KHACH_DANG_TAI = false; // dang co 1 lan goi Sheet chay (tai lan dau hoac Lam moi)
+  var KHACH_DA_TAI = false;   // da tai xong it nhat 1 lan (thanh cong hoac loi) tu luc mo trang
+  var KHACH_LOI_TAI = '';
+  var KHACH_DANG_LUU = {};    // ma -> true trong luc cho Sheet phan hoi, de khoa nut tranh bam 2 lan
+  var KHACH_LOC = 'tat-ca';
+  var KHACH_TIM = '';
+  var KHACH_O_DAN = { chu: '', ban: 'nha_trai' }; // noi dung o "Dan danh sach" giu qua cac lan ve lai
+  var KHACH_XEM_TRUOC_NHAP = null; // { ban, dong: [...] } dang cho xac nhan truoc khi gui len Sheet
+
+  // goi 1 lan khi admin vua mo trang (xem duoi cung file) — chay NGAM, khong chan cac
+  // cum khac. Cum "Khach moi"/"Tong quan" tu ve lai khi tai xong.
+  function napKhachNenTang(laiTuDau) {
+    if (!urlKhach()) return;
+    if (KHACH_DANG_TAI) return;
+    KHACH_DANG_TAI = true;
+    if (laiTuDau) { KHACH_LOI_TAI = ''; if (cumHienTai === 'khach-moi') veCum('khach-moi'); }
+    taiKhachTuSheet().then(function () {
+      KHACH_LOI_TAI = '';
+    }).catch(function (e) {
+      KHACH_LOI_TAI = e.message;
+    }).finally(function () {
+      KHACH_DANG_TAI = false; KHACH_DA_TAI = true;
+      if (cumHienTai === 'khach-moi' || cumHienTai === 'tong-quan') veCum(cumHienTai);
+    });
   }
-  function canhBaoChuaDang(k) {
-    return confirm(
-      'Khách "' + k.hienThi + '" CHƯA được đăng lên link thật.\n\n' +
-      'Nếu gửi link ngay bây giờ, khách mở ra sẽ chỉ thấy "Quý Khách" chứ không thấy tên mình.\n\n' +
-      'Bấm OK để vẫn lấy link (nhớ bấm "Đăng lên link thật" trước khi gửi), hoặc Cancel để quay lại.'
-    );
+
+  function trangThaiKhach(k) {
+    var td = (k.tinhTrangDen || '').toLowerCase();
+    if (/không|khong|no\b/.test(td)) return 'khong';
+    if (td) return 'den';
+    if (k.daGui) return 'gui';
+    return 'cho';
   }
-  function dangNhanhKhach() {
-    var c = ghCauHinh();
-    if (!c.token) { thongBao('Chưa có GitHub token — vào Cài đặt để nối trước.', 'loi'); chonCum('cai-dat'); return; }
-    dang();
+  var NHAN_TRANG_THAI = { cho: '⚪ Chưa gửi', gui: '🔵 Đã gửi', den: '🟢 Xác nhận đi', khong: '🔴 Không đến' };
+  var BO_LOC = [
+    { id: 'tat-ca', ten: 'Tất cả' },
+    { id: 'cho', ten: 'Chưa gửi' },
+    { id: 'gui', ten: 'Đã gửi' },
+    { id: 'den', ten: 'Xác nhận đi' },
+    { id: 'khong', ten: 'Không đến' },
+  ];
+
+  // BUG-31: veCum(id) xoa SACH #cotGiua roi dung lai tu dau — goi 2 lan lien tiep voi
+  // 2 id KHAC NHAU (vd 'khach-moi' roi 'tong-quan') thi lan sau DE MAT lan truoc, bat
+  // ke nguoi dung dang xem cum nao. Chi duoc ve lai DUNG cum dang mo (cumHienTai).
+  function veLaiSauKhiDoiKhach() {
+    if (cumHienTai === 'khach-moi' || cumHienTai === 'tong-quan') veCum(cumHienTai);
+  }
+  // navigator.clipboard.writeText tra ve PROMISE — try/catch thuong khong bat duoc loi
+  // (vd trinh duyet tu choi quyen clipboard), phai .catch() rieng de khong bao loi lung tung.
+  function chepClipboardAnToan(text) {
+    try {
+      var p = navigator.clipboard && navigator.clipboard.writeText(text);
+      if (p && p.catch) p.catch(function () {});
+    } catch (e) {}
+  }
+
+  // them 1 khach hoac 1 loat khach (import) -> goi thang len Sheet, khong qua nhap tam.
+  // maChepSan: ma do admin tao san va DA chep link ngay luc bam (xem nut "+ Them khach").
+  // Safari/iPad chan chep clipboard neu goi sau khi phai cho mang tra loi.
+  function themKhachLenSheet(dsMoi, oNut, maChepSan) {
+    if (oNut) oNut.disabled = true;
+    var maCu = khach.map(function (k) { return k.ma; });
+    return luuKhachLenSheet(dsMoi).then(function (dsSauKhiLuu) {
+      var vuaThem = dsSauKhiLuu.filter(function (k) { return maCu.indexOf(k.ma) < 0; });
+      veLaiSauKhiDoiKhach();
+      if (maChepSan) {
+        var k0 = dsSauKhiLuu.filter(function (k) { return k.ma === maChepSan; })[0];
+        if (k0) thongBao('Đã thêm "' + k0.hienThi + '" & chép sẵn link — dán vào Zalo để gửi luôn!', 'ok');
+        else thongBao('Đã thêm khách, nhưng link vừa chép KHÔNG dùng được — bấm "Chép link" trên thẻ để lấy lại.', 'loi');
+      } else {
+        thongBao('Đã thêm ' + vuaThem.length + ' khách.', 'ok');
+      }
+    }).catch(function (e) {
+      thongBao('Không lưu được: ' + e.message + (maChepSan ? ' — ĐỪNG gửi link vừa chép.' : ''), 'loi');
+    }).finally(function () {
+      if (oNut) oNut.disabled = false;
+    });
+  }
+
+  // BUG-32: luu that bai phai TRA LAI gia tri cu, neu khong the van hien ten moi nhu
+  // da luu va link chep ra mang ten chua he len Sheet.
+  function suaKhachTrenSheet(k, patch, oNut, imLang) {
+    var cu = {};
+    Object.keys(patch).forEach(function (f) { cu[f] = k[f]; });
+    Object.assign(k, patch);
+    KHACH_DANG_LUU[k.ma] = true;
+    if (oNut) oNut.disabled = true;
+    var gui = { ma: k.ma };
+    Object.keys(patch).forEach(function (f) { gui[f] = patch[f]; });
+    return luuKhachLenSheet([gui])
+      .then(function () { if (!imLang) thongBao('Đã lưu', 'ok'); })
+      .catch(function (e) { Object.assign(k, cu); thongBao('Không lưu được: ' + e.message, 'loi'); })
+      .finally(function () { delete KHACH_DANG_LUU[k.ma]; if (cumHienTai === 'khach-moi') veCum('khach-moi'); });
+  }
+
+  function xoaKhachHoi(k) {
+    if (!confirm('Xoá khách "' + k.hienThi + '"? Link đã gửi sẽ không còn hiển thị đúng tên nữa.')) return;
+    KHACH_DANG_LUU[k.ma] = true;
+    if (cumHienTai === 'khach-moi') veCum('khach-moi');
+    xoaKhachTrenSheet(k.ma).then(function () {
+      thongBao('Đã xoá'); veLaiSauKhiDoiKhach();
+    }).catch(function (e) {
+      delete KHACH_DANG_LUU[k.ma];
+      thongBao('Không xoá được: ' + e.message, 'loi');
+      if (cumHienTai === 'khach-moi') veCum('khach-moi');
+    });
+  }
+
+  function veTheKhach(k) {
+    var url = linkThiep(k.ban, k.ma, k.hienThi);
+    var dangLuu = !!KHACH_DANG_LUU[k.ma];
+    var the = el('div', { class: 'khach-the' });
+
+    var oHienThi = el('input', { type: 'text', class: 'ten-khach', value: k.hienThi, disabled: dangLuu ? 'true' : null });
+    var cbDoDai = el('p', { class: 'canh-bao an', style: 'margin:2px 0 0' });
+    var ctxDo = document.createElement('canvas').getContext('2d');
+    function doTen() {
+      ctxDo.font = CO_TEN_KHACH + 'px Arial';
+      var w = ctxDo.measureText(oHienThi.value || '').width;
+      if (w > KHUNG_TEN_KHACH) {
+        cbDoDai.textContent = '⚠️ Dài ~' + Math.round(w) + 'px / khung ' + KHUNG_TEN_KHACH + 'px — thiệp sẽ tự thu nhỏ chữ cho vừa.';
+        cbDoDai.classList.remove('an');
+      } else cbDoDai.classList.add('an');
+    }
+    doTen();
+    oHienThi.addEventListener('input', doTen);
+    oHienThi.addEventListener('change', function () {
+      var v = oHienThi.value.trim();
+      if (!v || v === k.hienThi) { oHienThi.value = k.hienThi; return; }
+      suaKhachTrenSheet(k, { hienThi: v }, oHienThi);
+    });
+
+    var chuaRoBan = k.ban !== 'nha_trai' && k.ban !== 'nha_gai';
+    var hangTren = el('div', { class: 'hang-tren' }, [oHienThi,
+      chuaRoBan
+        ? el('span', { class: 'the', style: 'background:#fdf2d8;color:#8a6d1f' }, ['⚠️ Chưa chọn thiệp'])
+        : el('span', { class: 'the ' + (k.ban === 'nha_trai' ? 'trai' : 'gai') }, [k.ban === 'nha_trai' ? 'Nhà trai' : 'Nhà gái']),
+    ]);
+    the.appendChild(hangTren);
+    the.appendChild(cbDoDai);
+    if (k.loiChuc) the.appendChild(el('p', { class: 'muc-nho', style: 'margin-top:4px;font-style:italic' }, ['“' + k.loiChuc + '”']));
+
+    var tt = trangThaiKhach(k);
+    var hangDuoi = el('div', { class: 'hang-duoi' });
+    hangDuoi.appendChild(el('span', { class: 'pill ' + tt }, [NHAN_TRANG_THAI[tt]]));
+    var nutChep = el('button', { class: 'nut nho', type: 'button', disabled: (dangLuu || chuaRoBan) ? 'true' : null,
+      title: chuaRoBan ? 'Cột "Thiệp" trong Google Sheet chưa ghi rõ Nhà trai hay Nhà gái' : null, onclick: function () {
+      chepClipboardAnToan(url);
+      if (!k.daGui) { suaKhachTrenSheet(k, { daGui: true }, null, true); }
+      thongBao('Đã chép link của ' + k.hienThi);
+    } }, ['📋 Chép link']);
+    var nutSua = el('button', { class: 'nut nho', type: 'button', disabled: dangLuu ? 'true' : null, onclick: function () { oHienThi.focus(); oHienThi.select(); } }, ['✏️']);
+    var nutXoa = el('button', { class: 'nut nho nguy', type: 'button', disabled: dangLuu ? 'true' : null, onclick: function () { xoaKhachHoi(k); } }, ['🗑']);
+    hangDuoi.appendChild(nutChep); hangDuoi.appendChild(nutSua); hangDuoi.appendChild(nutXoa);
+    the.appendChild(hangDuoi);
+    if (dangLuu) the.appendChild(el('p', { class: 'muc-nho', style: 'margin-top:4px' }, ['Đang lưu…']));
+    return the;
   }
 
   function veKhachMoi(cum) {
-    var chuaDang = khachChuaDang();
-    if (chuaDang.length) {
-      var hopCB = el('div', { class: 'khung' });
-      hopCB.appendChild(el('h3', {}, ['⚠️ ' + chuaDang.length + ' khách chưa đăng lên link thật']));
-      hopCB.appendChild(el('p', { class: 'muc-nho' }, ['Link cá nhân hoá chỉ hiện đúng tên sau khi danh sách khách được đăng. Trước đó khách mở link sẽ thấy "Quý Khách".']));
-      hopCB.appendChild(el('button', { class: 'nut chinh', type: 'button', style: 'margin-top:8px', onclick: dangNhanhKhach }, ['Đăng ngay để link chạy']));
-      cum.appendChild(hopCB);
+    if (!urlKhach()) {
+      var khungThiet = el('div', { class: 'khung' });
+      khungThiet.appendChild(el('h3', {}, ['Chưa nối danh sách khách']));
+      khungThiet.appendChild(el('p', { class: 'muc-nho' }, [
+        'Danh sách khách được lưu trên một Google Sheet riêng — thêm khách là có link gửi ngay, không cần đăng lên link thật. Việc nối chỉ làm 1 lần, khoảng 5 phút.',
+      ]));
+      khungThiet.appendChild(el('button', { class: 'nut chinh', type: 'button', onclick: function () { chonCum('cai-dat'); } }, ['Đi tới Cài đặt']));
+      cum.appendChild(khungThiet);
+      return;
     }
 
+    // BUG-33: vua doi URL o Cai dat (hoac chua tai lan nao) -> tu tai, khong hien danh sach rong
+    if (!KHACH_DA_TAI && !KHACH_DANG_TAI) napKhachNenTang();
+    if (!KHACH_DA_TAI && KHACH_DANG_TAI) {
+      cum.appendChild(el('p', { class: 'muc-nho' }, ['Đang tải danh sách khách…']));
+      return;
+    }
+    if (KHACH_LOI_TAI) {
+      var khungLoi = el('div', { class: 'khung' });
+      khungLoi.appendChild(el('h3', {}, ['⚠️ Không tải được danh sách khách']));
+      khungLoi.appendChild(el('p', { class: 'muc-nho' }, [KHACH_LOI_TAI]));
+      khungLoi.appendChild(el('button', { class: 'nut nho', type: 'button', onclick: function () { napKhachNenTang(true); } }, ['Thử lại']));
+      cum.appendChild(khungLoi);
+      return;
+    }
+
+    // ----- them 1 khach -----
     var toolbar = el('div', { class: 'khach-toolbar' });
     var dxInput = el('input', { type: 'text', placeholder: 'Danh xưng (vd: em, anh, chú)', style: 'width:180px;max-width:100%' });
     var tenInput = el('input', { type: 'text', placeholder: 'Tên khách', style: 'width:200px;max-width:100%' });
     var banSelect = el('select', {}, [el('option', { value: 'nha_trai' }, ['Nhà trai']), el('option', { value: 'nha_gai' }, ['Nhà gái'])]);
-    var nutThem = el('button', { class: 'nut', type: 'button', onclick: function () {
+    var nutThem = el('button', { class: 'nut chinh', type: 'button', onclick: function () {
       if (!tenInput.value.trim()) { thongBao('Nhập tên khách trước đã', 'loi'); return; }
       var hienThi = chuanHoaTenKhach(dxInput.value, tenInput.value);
       var trung = khach.filter(function (k) { return (k.hienThi || '').toLowerCase() === hienThi.toLowerCase(); });
       if (trung.length && !confirm('Đã có khách tên "' + hienThi + '" trong danh sách. Vẫn thêm một người nữa?')) return;
-      khach.push({ ma: taoMaKhach(), danhXung: dxInput.value.trim(), ten: tenInput.value.trim(), hienThi: hienThi, ban: banSelect.value, daGui: false, daDang: false });
-      dxInput.value = ''; tenInput.value = '';
-      baoThayDoi(); veCum('khach-moi');
+      var maMoi = taoMaKhach();
+      chepClipboardAnToan(linkThiep(banSelect.value, maMoi, hienThi)); // chep NGAY trong cu bam
+      themKhachLenSheet([{ ma: maMoi, danhXung: dxInput.value.trim(), ten: tenInput.value.trim(), hienThi: hienThi, ban: banSelect.value, daGui: false }], nutThem, maMoi)
+        .then(function () { dxInput.value = ''; tenInput.value = ''; });
     } }, ['+ Thêm khách']);
     toolbar.appendChild(dxInput); toolbar.appendChild(tenInput); toolbar.appendChild(banSelect); toolbar.appendChild(nutThem);
     cum.appendChild(toolbar);
     // BUG-13: bao ngay khi ten dang go da qua khung 279px cua thiep
     cum.appendChild(dungCanhBaoDoDai(tenInput, KHUNG_TEN_KHACH, CO_TEN_KHACH, 'Arial', 'tên khách trên thiệp'));
 
+    // ----- nhap loat tu Excel/Zalo, co xem truoc truoc khi gui len Sheet -----
     var dropImport = el('div', { class: 'drop-import' });
     dropImport.appendChild(el('div', {}, ['Dán danh sách từ Excel (2 cột: Danh xưng ⇥ Tên, mỗi dòng 1 khách)']));
     var taImport = el('textarea', { placeholder: 'em\tTuấn Anh\nanh\tMinh Quân\nchú\tHoàng' });
+    taImport.value = KHACH_O_DAN.chu;
+    taImport.addEventListener('input', function () { KHACH_O_DAN.chu = taImport.value; });
     dropImport.appendChild(taImport);
     var banImport = el('select', {}, [el('option', { value: 'nha_trai' }, ['Thêm vào: Nhà trai']), el('option', { value: 'nha_gai' }, ['Thêm vào: Nhà gái'])]);
-    var oBoQua = el('p', { class: 'canh-bao-do an' });
-    var nutImport = el('button', { class: 'nut nho', type: 'button', style: 'margin-top:8px', onclick: function () {
+    banImport.value = KHACH_O_DAN.ban;
+    banImport.addEventListener('change', function () { KHACH_O_DAN.ban = banImport.value; });
+    var nutXemTruocImport = el('button', { class: 'nut nho', type: 'button', style: 'margin-top:8px', onclick: function () {
       var dong = taImport.value.split('\n').map(function (d) { return d.trim(); });
-      var them = 0, boQua = [];
+      var xem = [], boQua = [];
       dong.forEach(function (d, i) {
         if (!d) return;
         var cot = d.split('\t');
@@ -928,124 +1171,139 @@
         if (cot.length < 2) { boQua.push('dòng ' + (i + 1) + ': "' + d + '"'); return; }
         var dx = cot[0].trim(), ten = cot.slice(1).join(' ').trim();
         if (!ten) { boQua.push('dòng ' + (i + 1) + ': "' + d + '"'); return; }
-        khach.push({ ma: taoMaKhach(), danhXung: dx, ten: ten, hienThi: chuanHoaTenKhach(dx, ten), ban: banImport.value, daGui: false, daDang: false });
-        them++;
+        xem.push({ ma: '', danhXung: dx, ten: ten, hienThi: chuanHoaTenKhach(dx, ten), ban: banImport.value, daGui: false });
       });
-      taImport.value = '';
-      // Diem nho #2: truoc day dong thieu cot bi bo qua HOAN TOAN im lang
-      window.__BO_QUA_IMPORT__ = boQua;
-      thongBao('Đã thêm ' + them + ' khách' + (boQua.length ? ' — bỏ qua ' + boQua.length + ' dòng thiếu cột Tên' : ''), boQua.length ? 'loi' : '');
-      baoThayDoi(); veCum('khach-moi');
-    } }, ['Nhập danh sách']);
+      if (!xem.length) { thongBao('Không đọc được dòng nào hợp lệ.', 'loi'); return; }
+      KHACH_XEM_TRUOC_NHAP = { dong: xem, boQua: boQua };
+      veCum('khach-moi');
+    } }, ['Xem trước']);
     dropImport.appendChild(banImport);
-    dropImport.appendChild(nutImport);
-    dropImport.appendChild(oBoQua);
-    if (window.__BO_QUA_IMPORT__ && window.__BO_QUA_IMPORT__.length) {
-      oBoQua.textContent = 'Bỏ qua vì thiếu cột thứ 2 (Tên): ' + window.__BO_QUA_IMPORT__.join(' · ');
-      oBoQua.classList.remove('an');
-      window.__BO_QUA_IMPORT__ = null;
-    }
+    dropImport.appendChild(nutXemTruocImport);
     cum.appendChild(dropImport);
 
-    var bang = el('table', { class: 'ds' });
-    var thead = el('thead', {}, [el('tr', {}, [
-      el('th', {}, ['Hiển thị']), el('th', {}, ['Bản']), el('th', {}, ['Trạng thái']), el('th', {}, ['Đã gửi']), el('th', {}, ['Link']), el('th', {}, ['']),
-    ])]);
-    bang.appendChild(thead);
-    var tbody = el('tbody', {});
-    var ctxDo = document.createElement('canvas').getContext('2d');
-    khach.forEach(function (k, idx) {
-      var url = linkThiep(k.ban, k.ma);
-      var tr = el('tr', {});
-      var oTen = el('td', {});
-      var oHienThi = el('input', { type: 'text', value: k.hienThi, style: 'width:100%;border:0;background:none;font:inherit' });
-      var cb = el('p', { class: 'canh-bao an', style: 'margin:2px 0 0' });
-      function doTen() {
-        ctxDo.font = CO_TEN_KHACH + 'px Arial';
-        var w = ctxDo.measureText(oHienThi.value || '').width;
-        if (w > KHUNG_TEN_KHACH) {
-          cb.textContent = '⚠️ Dài ~' + Math.round(w) + 'px / khung ' + KHUNG_TEN_KHACH + 'px — thiệp sẽ tự thu nhỏ chữ cho vừa.';
-          cb.classList.remove('an');
-        } else cb.classList.add('an');
+    if (KHACH_XEM_TRUOC_NHAP) {
+      var khungXem = el('div', { class: 'khung' });
+      khungXem.appendChild(el('h3', {}, ['Xem trước ' + KHACH_XEM_TRUOC_NHAP.dong.length + ' khách sắp thêm']));
+      var ulXem = el('ul', { style: 'margin:4px 0;padding-left:18px;font-size:13px' });
+      KHACH_XEM_TRUOC_NHAP.dong.forEach(function (k) { ulXem.appendChild(el('li', {}, [k.hienThi + ' — ' + (k.ban === 'nha_trai' ? 'Nhà trai' : 'Nhà gái')])); });
+      khungXem.appendChild(ulXem);
+      if (KHACH_XEM_TRUOC_NHAP.boQua.length) {
+        khungXem.appendChild(el('p', { class: 'canh-bao-do' }, ['Bỏ qua vì thiếu cột thứ 2 (Tên): ' + KHACH_XEM_TRUOC_NHAP.boQua.join(' · ')]));
       }
-      oHienThi.addEventListener('input', function () { k.hienThi = oHienThi.value; k.daDang = false; doTen(); baoThayDoi(); });
-      doTen();
-      oTen.appendChild(oHienThi); oTen.appendChild(cb);
-      tr.appendChild(oTen);
-      tr.appendChild(el('td', {}, [el('span', { class: 'the ' + (k.ban === 'nha_trai' ? 'trai' : 'gai') }, [k.ban === 'nha_trai' ? 'Nhà trai' : 'Nhà gái'])]));
-      tr.appendChild(el('td', {}, [
-        k.daDang
-          ? el('span', { style: 'color:var(--xanh);font-size:12px;white-space:nowrap' }, ['✔ Đã đăng'])
-          : el('span', { style: 'color:var(--vang);font-size:12px;white-space:nowrap' }, ['● Chưa đăng']),
-      ]));
-      var oDaGui = document.createElement('input'); oDaGui.type = 'checkbox'; oDaGui.checked = !!k.daGui;
-      oDaGui.addEventListener('change', function () { k.daGui = oDaGui.checked; baoThayDoi(); });
-      tr.appendChild(el('td', {}, [oDaGui]));
-      tr.appendChild(el('td', {}, [el('a', {
-        href: url, target: '_blank', class: 'link-nho',
-        onclick: function (ev) { if (!k.daDang && !canhBaoChuaDang(k)) ev.preventDefault(); },
-      }, [url.length > 40 ? '...' + url.slice(-34) : url])]));
-      var nutXoa = el('button', { class: 'nut nho nguy', type: 'button', onclick: function () {
-        if (!confirm('Xoá khách "' + k.hienThi + '"?')) return;
-        khach.splice(idx, 1); baoThayDoi(); veCum('khach-moi');
-      } }, ['Xoá']);
-      var nutChep = el('button', { class: 'nut nho', type: 'button', style: 'margin-right:4px', onclick: function () {
-        if (!k.daDang && !canhBaoChuaDang(k)) return;
-        navigator.clipboard.writeText(url);
-        thongBao(k.daDang ? 'Đã chép link' : 'Đã chép link — NHỚ bấm "Đăng lên link thật" trước khi gửi!', k.daDang ? '' : 'loi');
-      } }, ['Chép']);
-      tr.appendChild(el('td', {}, [nutChep, nutXoa]));
-      tbody.appendChild(tr);
+      var hangNutXem = el('div', { class: 'hang-nut' });
+      var nutXacNhanImport = el('button', { class: 'nut chinh', type: 'button', onclick: function () {
+        var dsGui = KHACH_XEM_TRUOC_NHAP.dong;
+        KHACH_XEM_TRUOC_NHAP = null;
+        themKhachLenSheet(dsGui, nutXacNhanImport).then(function () { KHACH_O_DAN.chu = ''; veLaiSauKhiDoiKhach(); });
+      } }, ['Xác nhận thêm']);
+      hangNutXem.appendChild(nutXacNhanImport);
+      hangNutXem.appendChild(el('button', { class: 'nut nho', type: 'button', onclick: function () { KHACH_XEM_TRUOC_NHAP = null; veCum('khach-moi'); } }, ['Huỷ']));
+      khungXem.appendChild(hangNutXem);
+      cum.appendChild(khungXem);
+    }
+
+    // ----- tim + loc + danh sach dang the -----
+    var oTim = el('input', { type: 'text', class: 'o-tim', placeholder: 'Tìm theo tên…', value: KHACH_TIM });
+    oTim.addEventListener('input', function () { KHACH_TIM = oTim.value; capNhatDanhSachKhach(); });
+    cum.appendChild(oTim);
+
+    var boLoc = el('div', { class: 'bo-loc' });
+    BO_LOC.forEach(function (b) {
+      var soLuong = b.id === 'tat-ca' ? khach.length : khach.filter(function (k) { return trangThaiKhach(k) === b.id; }).length;
+      var btn = el('button', { type: 'button', class: b.id === KHACH_LOC ? 'active' : '', onclick: function () { KHACH_LOC = b.id; veCum('khach-moi'); } }, [b.ten + ' (' + soLuong + ')']);
+      boLoc.appendChild(btn);
     });
-    bang.appendChild(tbody);
-    if (!khach.length) cum.appendChild(el('p', { class: 'muc-nho' }, ['Chưa có khách nào. Thêm từng người hoặc dán danh sách ở trên.']));
-    else cum.appendChild(bang);
+    cum.appendChild(boLoc);
+
+    var dsHost = el('div', { id: 'khachDsHost' });
+    cum.appendChild(dsHost);
+    function capNhatDanhSachKhach() {
+      dsHost.innerHTML = '';
+      var tim = KHACH_TIM.trim().toLowerCase();
+      var ds = khach.filter(function (k) {
+        if (KHACH_LOC !== 'tat-ca' && trangThaiKhach(k) !== KHACH_LOC) return false;
+        if (tim && (k.hienThi || '').toLowerCase().indexOf(tim) < 0) return false;
+        return true;
+      });
+      if (!ds.length) { dsHost.appendChild(el('p', { class: 'muc-nho' }, ['Không có khách nào khớp.'])); return; }
+      ds.forEach(function (k) { dsHost.appendChild(veTheKhach(k)); });
+    }
+    capNhatDanhSachKhach();
 
     if (khach.length) {
-      var nutXuat = el('button', { class: 'nut nho', type: 'button', style: 'margin-top:10px', onclick: function () {
+      var hangCuoi = el('div', { style: 'display:flex;gap:8px;margin-top:12px' });
+      hangCuoi.appendChild(el('button', { class: 'nut nho', type: 'button', onclick: function () { napKhachNenTang(true); } }, ['↻ Làm mới']));
+      hangCuoi.appendChild(el('button', { class: 'nut nho', type: 'button', onclick: function () {
         // BUG-15: nhan doi dau " + them BOM de Excel tren Windows doc dung tieng Viet
         var q = function (v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; };
-        var dong = [['Danh xung', 'Ten', 'Hien thi', 'Ban', 'Ma', 'Link', 'Da gui', 'Da dang'].map(q).join(',')];
+        var dong = [['Danh xung', 'Ten', 'Hien thi', 'Ban', 'Ma', 'Link', 'Da gui', 'Da phan hoi', 'Tinh trang den'].map(q).join(',')];
         khach.forEach(function (k) {
           dong.push([
             k.danhXung || '', k.ten || '', k.hienThi || '',
             k.ban === 'nha_trai' ? 'Nha trai' : 'Nha gai', k.ma,
-            linkThiep(k.ban, k.ma), k.daGui ? 'x' : '', k.daDang ? 'x' : '',
+            linkThiep(k.ban, k.ma, k.hienThi), k.daGui ? 'x' : '', k.daPhanHoi ? 'x' : '', k.tinhTrangDen || '',
           ].map(q).join(','));
         });
         var blob = new Blob(['﻿' + dong.join('\r\n')], { type: 'text/csv;charset=utf-8' });
         var href = URL.createObjectURL(blob);
         var a = document.createElement('a'); a.href = href; a.download = 'danh-sach-khach.csv'; a.click();
         setTimeout(function () { URL.revokeObjectURL(href); }, 2000);
-      } }, ['Xuất CSV']);
-      cum.appendChild(nutXuat);
+      } }, ['Xuất CSV']));
+      cum.appendChild(hangCuoi);
     }
   }
 
   // ---------- cai dat ----------
-  var MA_APPS_SCRIPT = [
-    'function doPost(e) {',
-    '  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();',
-    '  var d = JSON.parse(e.postData.contents);',
-    '  sheet.appendRow([',
-    '    new Date(), d.ban || "", d.name || "", d.message || "",',
-    '    d.form_item8 || "", d.form_item9 || "", d.form_item10 || ""',
-    '  ]);',
-    '  return ContentService.createTextOutput("ok");',
-    '}',
-  ].join('\n');
+  // Mot Apps Script Web App duy nhat lam CA 2 viec: nhan RSVP tu thiep + luu danh sach
+  // khach moi tu admin. Ma nguon doc THANG tu rsvp-google-apps-script.js (deploy.sh chep
+  // file nay len repo) -> chi con 1 ban goc, khong con ban sao nhung trong admin de lech nhau.
+  var MA_APPS_SCRIPT = '';
+  function taiMaAppsScript() {
+    if (MA_APPS_SCRIPT) return Promise.resolve(MA_APPS_SCRIPT);
+    return fetch('../rsvp-google-apps-script.js', { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+      .then(function (t) { MA_APPS_SCRIPT = t; return t; });
+  }
 
   function veCaiDat(cum) {
     cum.appendChild(el('div', { class: 'khung' }, [
-      el('h3', {}, ['RSVP — nhận phản hồi về Google Sheet']),
-      el('p', { class: 'muc-nho' }, ['1. Tạo 1 Google Sheet mới. 2. Vào Tiện ích mở rộng → Apps Script. 3. Xoá code mẫu, dán đoạn dưới đây vào. 4. Bấm Triển khai → Ứng dụng web, quyền truy cập chọn "Bất kỳ ai". 5. Dán URL nhận được vào ô bên dưới.']),
+      el('h3', {}, ['Danh sách khách & RSVP — Google Sheet']),
+      el('p', { class: 'muc-nho' }, [
+        'Một Google Sheet duy nhất làm cả 2 việc: lưu danh sách khách mời (để thêm khách là có link gửi ngay) và nhận phản hồi RSVP. Làm 1 lần, khoảng 5 phút: ',
+        '1. Tạo 1 Google Sheet mới. 2. Vào Tiện ích mở rộng → Apps Script. 3. Xoá code mẫu, dán đoạn dưới đây vào. 4. Bấm Triển khai → Ứng dụng web, quyền truy cập chọn "Bất kỳ ai". 5. Dán URL nhận được vào ô bên dưới rồi bấm "Kiểm tra kết nối".',
+      ]),
       (function () {
         var ta = el('textarea', { class: 'code', readonly: 'true' });
-        ta.value = MA_APPS_SCRIPT;
+        ta.value = 'Đang tải mã…';
+        taiMaAppsScript().then(function (t) { ta.value = t; })
+          .catch(function (e) { ta.value = 'Không tải được mã (' + e.message + '). Mở file rsvp-google-apps-script.js trong thư mục dự án để chép tay.'; });
         return ta;
       })(),
-      el('button', { class: 'nut nho', type: 'button', style: 'margin-top:8px', onclick: function () { navigator.clipboard.writeText(MA_APPS_SCRIPT); thongBao('Đã chép mã Apps Script'); } }, ['Chép mã']),
-      truong({ nhan: 'URL Apps Script Web App (để trống = chỉ hiện lời cảm ơn, chưa lưu phản hồi)', path: 'rsvp.googleScriptUrl' }),
+      el('button', { class: 'nut nho', type: 'button', style: 'margin-top:8px', onclick: function () {
+        if (!MA_APPS_SCRIPT) { thongBao('Mã chưa tải xong, thử lại sau giây lát.', 'loi'); return; }
+        chepClipboardAnToan(MA_APPS_SCRIPT); thongBao('Đã chép mã Apps Script');
+      } }, ['Chép mã']),
+      truong({ nhan: 'URL Apps Script Web App (để trống = khách mời KHÔNG lưu được, RSVP chỉ hiện lời cảm ơn)', path: 'rsvp.googleScriptUrl', khiSua: function () { KHACH_DA_TAI = false; KHACH_LOI_TAI = ''; khach = []; } }),
+      (function () {
+        var wrap = el('div');
+        var trangThai = el('p', { class: 'trang-thai-ket-noi' });
+        wrap.appendChild(el('button', { class: 'nut nho', type: 'button', onclick: function () {
+          trangThai.innerHTML = ''; trangThai.appendChild(el('span', {}, ['Đang kiểm tra…']));
+          kiemTraKetNoiKhach().then(function (kq) {
+            // KHONG goi veCum(cumHienTai) o day: no ve lai CA cum "Cai dat" tu dau, xoa
+            // mat luon dong "Da ket noi" vua hien (tao lai trangThai moi, rong trang).
+            trangThai.innerHTML = '';
+            trangThai.appendChild(el('span', { class: 'cham sach' }));
+            trangThai.appendChild(el('span', {}, ['✅ Đã kết nối — ' + kq.soKhach + ' khách trên Sheet']));
+          }).catch(function (e) {
+            trangThai.innerHTML = '';
+            trangThai.appendChild(el('span', { class: 'cham' }));
+            trangThai.appendChild(el('span', {}, ['⚠️ ' + e.message]));
+          });
+        } }, ['Kiểm tra kết nối']));
+        wrap.appendChild(trangThai);
+        return wrap;
+      })(),
     ]));
 
     cum.appendChild(el('div', { class: 'khung' }, [
@@ -1110,23 +1368,23 @@
     // BUG-11: sinh thu TRUOC khi hoi, de loi du lieu (ngay trong...) chan dung tai day
     var traiHtml, gaiHtml;
     try {
-      traiHtml = sinhBan('nha_trai', { khach: khach }).html;
-      gaiHtml = sinhBan('nha_gai', { khach: khach }).html;
+      traiHtml = sinhBan('nha_trai', {}).html;
+      gaiHtml = sinhBan('nha_gai', {}).html;
     } catch (e) {
       thongBao('Lỗi dữ liệu — CHƯA đăng gì cả: ' + e.message, 'loi');
       return;
     }
 
     // BUG-09: hoi lai truoc khi ghi de link that
+    // Danh sach khach KHONG con nam trong buoc nay nua — no da luu thang tren Google
+    // Sheet ngay khi them/sua/xoa, khong lien quan gi den nut "Dang" o day.
     var mau = demGiaTriMau();
-    var chuaDang = khach.filter(function (k) { return !k.daDang; }).length;
     var hoi = [
       'ĐĂNG LÊN LINK THẬT?',
       '',
       'Sẽ GHI ĐÈ trực tiếp lên link khách đang xem:',
       '  · ' + gocThiep() + 'nha-trai/',
       '  · ' + gocThiep() + 'nha-gai/',
-      '  · danh sách khách (' + khach.length + ' khách' + (chuaDang ? ', ' + chuaDang + ' khách mới' : '') + ')',
       '  · dữ liệu gốc du-lieu.json',
       '',
       lanDangCuoi ? 'Lần đăng gần nhất: ' + lanDangCuoi : 'Chưa từng đăng từ máy/trình duyệt này.',
@@ -1147,13 +1405,10 @@
     var luc = new Date().toLocaleString('vi-VN');
     Promise.all([
       ghPutFile('du-lieu.json', JSON.stringify(duLieu, null, 2), 'Cap nhat du lieu tu admin - ' + luc),
-      ghPutFile('khach.json', JSON.stringify(khach, null, 2), 'Cap nhat danh sach khach tu admin - ' + luc),
       ghPutFile('nha-trai/index.html', traiHtml, 'Sinh lai thiep nha trai tu admin - ' + luc),
       ghPutFile('nha-gai/index.html', gaiHtml, 'Sinh lai thiep nha gai tu admin - ' + luc),
     ]).then(function () {
       DA_SUA = false;
-      // BUG-06: sau khi dang thanh cong, moi khach moi thuc su co tren link that
-      khach.forEach(function (k) { k.daDang = true; });
       lanDangCuoi = luc;
       try { localStorage.setItem('thiep_lan_dang_cuoi', luc); } catch (e) {}
       xoaNhap(); // BUG-08: dang xong thi khong con nhap "chua dang" nua
@@ -1172,12 +1427,9 @@
   function taiDuLieu() {
     return Promise.all([
       fetch('../du-lieu.json').then(function (r) { return r.json(); }),
-      fetch('../khach.json').then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
       fetch('../thiep-khong-prewedding.html').then(function (r) { return r.text(); }),
     ]).then(function (kq) {
-      duLieu = kq[0]; khach = kq[1] || []; gocHtml = kq[2];
-      // khach tai tu server => chac chan da co tren link that
-      khach.forEach(function (k) { if (k.daDang === undefined) k.daDang = true; });
+      duLieu = kq[0]; gocHtml = kq[1];
 
       // BUG-08: co ban nhap chua dang thi hoi khoi phuc
       var nhap = docNhap();
@@ -1191,13 +1443,16 @@
         );
         if (co) {
           duLieu = nhap.duLieu;
-          if (Array.isArray(nhap.khach)) khach = nhap.khach;
           DA_SUA = true;
           setTimeout(function () { thongBao('Đã khôi phục bản nháp lúc ' + chu + ' — nhớ bấm "Đăng lên link thật".', 'ok'); }, 300);
         } else {
           xoaNhap();
         }
       }
+
+      // Danh sach khach nam tren Google Sheet, khong phai file trong repo -> tai NGAM
+      // (khong chan man hinh dau tien), tu ve lai cum khi xong. Xem napKhachNenTang().
+      napKhachNenTang();
     });
   }
 

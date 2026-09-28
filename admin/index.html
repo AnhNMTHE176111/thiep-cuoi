@@ -103,6 +103,21 @@
   .o-tai-len{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
   .o-tai-len input[type=file]{font-size:12px;max-width:220px}
   .trang-thai-tai{font-size:12px;color:var(--nau-nhat)}
+  /* the khach (danh sach khach mua tren Google Sheet) */
+  .o-tim{width:100%;padding:9px 11px;border:1px solid var(--vien);border-radius:8px;font:inherit;margin-bottom:12px}
+  .bo-loc{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .bo-loc button{padding:5px 12px;border-radius:14px;border:1px solid var(--vien);background:var(--trang);font:inherit;font-size:12px;cursor:pointer;color:#3a332c}
+  .bo-loc button.active{background:var(--nau);color:#fff;border-color:var(--nau)}
+  .khach-the{border:1px solid var(--vien);border-radius:12px;padding:12px 14px;margin-bottom:10px;background:var(--trang)}
+  .khach-the .hang-tren{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .khach-the input.ten-khach{border:0;background:none;font:inherit;font-size:15px;font-weight:600;flex:1;min-width:0;padding:2px 0}
+  .khach-the .hang-duoi{display:flex;justify-content:flex-end;align-items:center;margin-top:8px;gap:6px;flex-wrap:wrap}
+  .pill{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:600;margin-right:auto}
+  .pill.cho{background:#f0ebe3;color:var(--nau-nhat)}
+  .pill.gui{background:#e7eef7;color:#3a5f8a}
+  .pill.den{background:#e5f1ea;color:var(--xanh)}
+  .pill.khong{background:#fbe9e7;color:var(--do)}
+  .trang-thai-ket-noi{display:flex;align-items:center;gap:8px;font-size:13px;margin-top:8px}
   /* BUG-10: media query phai nam CUOI file, neu khong rule sau se de len .cot-xem{display:flex} */
   @media (max-width:1100px){
     .layout{grid-template-columns:200px 1fr}
