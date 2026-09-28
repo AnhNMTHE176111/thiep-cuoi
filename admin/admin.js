@@ -942,8 +942,6 @@
   // (them/sua/xoa) goi thang len Sheet va co hieu luc NGAY — khong con khai niem
   // "chưa đăng lên link thật" nhu ban cu (BUG-06 cu). Link ca nhan hoa mang san ten trong
   // chinh no (?n=...) nen luon dung tu luc gui, khong phu thuoc thiep da "Dang" hay chua.
-  var KHUNG_TEN_KHACH = 279; // be ngang khung #HEADLINE15 tren thiep
-  var CO_TEN_KHACH = 28;
 
   var KHACH_DANG_TAI = false; // dang co 1 lan goi Sheet chay (tai lan dau hoac Lam moi)
   var KHACH_DA_TAI = false;   // da tai xong it nhat 1 lan (thanh cong hoac loi) tu luc mo trang
@@ -1060,18 +1058,6 @@
     var the = el('div', { class: 'khach-the' });
 
     var oHienThi = el('input', { type: 'text', class: 'ten-khach', value: k.hienThi, disabled: dangLuu ? 'true' : null });
-    var cbDoDai = el('p', { class: 'canh-bao an', style: 'margin:2px 0 0' });
-    var ctxDo = document.createElement('canvas').getContext('2d');
-    function doTen() {
-      ctxDo.font = CO_TEN_KHACH + 'px Arial';
-      var w = ctxDo.measureText(oHienThi.value || '').width;
-      if (w > KHUNG_TEN_KHACH) {
-        cbDoDai.textContent = '⚠️ Dài ~' + Math.round(w) + 'px / khung ' + KHUNG_TEN_KHACH + 'px — thiệp sẽ tự thu nhỏ chữ cho vừa.';
-        cbDoDai.classList.remove('an');
-      } else cbDoDai.classList.add('an');
-    }
-    doTen();
-    oHienThi.addEventListener('input', doTen);
     oHienThi.addEventListener('change', function () {
       var v = oHienThi.value.trim();
       if (!v || v === k.hienThi) { oHienThi.value = k.hienThi; return; }
@@ -1081,18 +1067,26 @@
     var chuaRoBan = k.ban !== 'nha_trai' && k.ban !== 'nha_gai';
     var hangTren = el('div', { class: 'hang-tren' }, [oHienThi,
       chuaRoBan
-        ? el('span', { class: 'the', style: 'background:#fdf2d8;color:#8a6d1f' }, ['⚠️ Chưa chọn thiệp'])
+        ? (function () {
+          // dong go tay tren Sheet de trong cot "Thiep" -> chon luon o day, chon xong la co link
+          var chon = el('select', { class: 'the', style: 'background:#fdf2d8;color:#8a6d1f;border:0', disabled: dangLuu ? 'true' : null }, [
+            el('option', { value: '' }, ['Chọn thiệp…']),
+            el('option', { value: 'nha_trai' }, ['Nhà trai']),
+            el('option', { value: 'nha_gai' }, ['Nhà gái']),
+          ]);
+          chon.addEventListener('change', function () { if (chon.value) suaKhachTrenSheet(k, { ban: chon.value }, chon); });
+          return chon;
+        })()
         : el('span', { class: 'the ' + (k.ban === 'nha_trai' ? 'trai' : 'gai') }, [k.ban === 'nha_trai' ? 'Nhà trai' : 'Nhà gái']),
     ]);
     the.appendChild(hangTren);
-    the.appendChild(cbDoDai);
     if (k.loiChuc) the.appendChild(el('p', { class: 'muc-nho', style: 'margin-top:4px;font-style:italic' }, ['“' + k.loiChuc + '”']));
 
     var tt = trangThaiKhach(k);
     var hangDuoi = el('div', { class: 'hang-duoi' });
     hangDuoi.appendChild(el('span', { class: 'pill ' + tt }, [NHAN_TRANG_THAI[tt]]));
     var nutChep = el('button', { class: 'nut nho', type: 'button', disabled: (dangLuu || chuaRoBan) ? 'true' : null,
-      title: chuaRoBan ? 'Cột "Thiệp" trong Google Sheet chưa ghi rõ Nhà trai hay Nhà gái' : null, onclick: function () {
+      title: chuaRoBan ? 'Chọn Nhà trai hoặc Nhà gái ở góc trên thẻ này trước' : null, onclick: function () {
       chepClipboardAnToan(url);
       if (!k.daGui) { suaKhachTrenSheet(k, { daGui: true }, null, true); }
       thongBao('Đã chép link của ' + k.hienThi);
@@ -1132,6 +1126,13 @@
       return;
     }
 
+    var urlSheet = ((duLieu.rsvp && duLieu.rsvp.sheetUrl) || '').trim();
+    if (urlSheet) {
+      cum.appendChild(el('div', { style: 'margin-bottom:12px' }, [
+        el('a', { class: 'nut nho', href: urlSheet, target: '_blank', rel: 'noopener', style: 'text-decoration:none;display:inline-block' }, ['📊 Mở Google Sheet']),
+      ]));
+    }
+
     // ----- them 1 khach -----
     var toolbar = el('div', { class: 'khach-toolbar' });
     var dxInput = el('input', { type: 'text', placeholder: 'Danh xưng (vd: em, anh, chú)', style: 'width:180px;max-width:100%' });
@@ -1149,8 +1150,6 @@
     } }, ['+ Thêm khách']);
     toolbar.appendChild(dxInput); toolbar.appendChild(tenInput); toolbar.appendChild(banSelect); toolbar.appendChild(nutThem);
     cum.appendChild(toolbar);
-    // BUG-13: bao ngay khi ten dang go da qua khung 279px cua thiep
-    cum.appendChild(dungCanhBaoDoDai(tenInput, KHUNG_TEN_KHACH, CO_TEN_KHACH, 'Arial', 'tên khách trên thiệp'));
 
     // ----- nhap loat tu Excel/Zalo, co xem truoc truoc khi gui len Sheet -----
     var dropImport = el('div', { class: 'drop-import' });
@@ -1284,6 +1283,7 @@
         if (!MA_APPS_SCRIPT) { thongBao('Mã chưa tải xong, thử lại sau giây lát.', 'loi'); return; }
         chepClipboardAnToan(MA_APPS_SCRIPT); thongBao('Đã chép mã Apps Script');
       } }, ['Chép mã']),
+      truong({ nhan: 'Link Google Sheet (để hiện nút "Mở Google Sheet" ở mục Khách mời)', path: 'rsvp.sheetUrl' }),
       truong({ nhan: 'URL Apps Script Web App (để trống = khách mời KHÔNG lưu được, RSVP chỉ hiện lời cảm ơn)', path: 'rsvp.googleScriptUrl', khiSua: function () { KHACH_DA_TAI = false; KHACH_LOI_TAI = ''; khach = []; } }),
       (function () {
         var wrap = el('div');
