@@ -199,7 +199,22 @@ function layTrangKhach_() {
   }
   // cot Ma luon la VAN BAN (dat lai moi lan cho ca Sheet tao tu ban script cu)
   trang.getRange(1, 1, trang.getMaxRows(), 1).setNumberFormat('@');
+  datOTick_(trang);
   return trang;
+}
+
+// "Da gui" / "Da phan hoi" hien o tick thay vi chu TRUE/FALSE.
+// Dung requireCheckbox chu KHONG dung insertCheckboxes(): ham kia ghi FALSE vao ca 999 o
+// trong -> getLastRow() thanh 1000 va khach moi bi noi xuong tan dong 1001.
+function datOTick_(trang) {
+  var cuoi = trang.getMaxRows();
+  if (cuoi < 2) return;
+  var tick = SpreadsheetApp.newDataValidation().requireCheckbox().build();
+  [VI_TRI.daGui, VI_TRI.daPhanHoi].forEach(function (i) {
+    var dv = trang.getRange(cuoi, i + 1).getDataValidation();
+    if (dv && dv.getCriteriaType() === SpreadsheetApp.DataValidationCriteria.CHECKBOX) return; // da dat roi
+    trang.getRange(2, i + 1, cuoi - 1, 1).setDataValidation(tick);
+  });
 }
 
 function docGia_(trang) {

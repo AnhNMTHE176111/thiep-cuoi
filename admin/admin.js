@@ -386,6 +386,7 @@
     });
   }
   function chonCum(id) {
+    document.body.classList.remove('mo-menu');
     cumHienTai = id;
     document.querySelectorAll('#cotNav button').forEach(function (b) { b.classList.toggle('active', b.dataset.id === id); });
     var c = CAC_CUM.filter(function (x) { return x.id === id; })[0];
@@ -1135,8 +1136,8 @@
 
     // ----- them 1 khach -----
     var toolbar = el('div', { class: 'khach-toolbar' });
-    var dxInput = el('input', { type: 'text', placeholder: 'Danh xưng (vd: em, anh, chú)', style: 'width:180px;max-width:100%' });
-    var tenInput = el('input', { type: 'text', placeholder: 'Tên khách', style: 'width:200px;max-width:100%' });
+    var dxInput = el('input', { type: 'text', placeholder: 'Danh xưng (vd: em, anh, chú)' });
+    var tenInput = el('input', { type: 'text', placeholder: 'Tên khách' });
     var banSelect = el('select', {}, [el('option', { value: 'nha_trai' }, ['Nhà trai']), el('option', { value: 'nha_gai' }, ['Nhà gái'])]);
     var nutThem = el('button', { class: 'nut chinh', type: 'button', onclick: function () {
       if (!tenInput.value.trim()) { thongBao('Nhập tên khách trước đã', 'loi'); return; }
@@ -1161,7 +1162,7 @@
     var banImport = el('select', {}, [el('option', { value: 'nha_trai' }, ['Thêm vào: Nhà trai']), el('option', { value: 'nha_gai' }, ['Thêm vào: Nhà gái'])]);
     banImport.value = KHACH_O_DAN.ban;
     banImport.addEventListener('change', function () { KHACH_O_DAN.ban = banImport.value; });
-    var nutXemTruocImport = el('button', { class: 'nut nho', type: 'button', style: 'margin-top:8px', onclick: function () {
+    var nutXemTruocImport = el('button', { class: 'nut nho', type: 'button', onclick: function () {
       var dong = taImport.value.split('\n').map(function (d) { return d.trim(); });
       var xem = [], boQua = [];
       dong.forEach(function (d, i) {
@@ -1177,8 +1178,7 @@
       KHACH_XEM_TRUOC_NHAP = { dong: xem, boQua: boQua };
       veCum('khach-moi');
     } }, ['Xem trước']);
-    dropImport.appendChild(banImport);
-    dropImport.appendChild(nutXemTruocImport);
+    dropImport.appendChild(el('div', { class: 'hang-nhap' }, [banImport, nutXemTruocImport]));
     cum.appendChild(dropImport);
 
     if (KHACH_XEM_TRUOC_NHAP) {
@@ -1475,6 +1475,8 @@
       window.open(linkThiep(banXem), '_blank');
     });
     document.getElementById('nutDang').addEventListener('click', function () { dang(); });
+    document.getElementById('nutMenu').addEventListener('click', function () { document.body.classList.toggle('mo-menu'); });
+    document.getElementById('manChe').addEventListener('click', function () { document.body.classList.remove('mo-menu'); });
     window.addEventListener('beforeunload', function (e) { if (DA_SUA) { e.preventDefault(); e.returnValue = ''; } });
     // BUG-01: doi be ngang cua so -> tinh lai ti le thu nho cua khung xem truoc
     var henScale = null;
