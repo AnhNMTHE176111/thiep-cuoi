@@ -47,7 +47,180 @@ html, body{height:auto !important;}
     if (box) { box.style.display = 'flex'; form.reset(); }
   }
   document.addEventListener('submit', onSubmit, true);
-})();</script><button id="music-toggle" type="button" aria-label="Tắt nhạc" title="Tắt nhạc" aria-pressed="true" class="playing">
+})();</script><style id="style_music_toggle">
+  :root {
+    --brown-main: #a86f52;
+    --brown-main-2: #b97b5c;
+    --brown-dark: #7d4d39;
+    --brown-soft: #c9a18d;
+    --brown-soft-2: #efe4dd;
+    --brown-light: #fbf7f4;
+    --brown-border: rgba(168, 111, 82, 0.38);
+    --brown-shadow: rgba(125, 77, 57, 0.18);
+    --brown-glow: rgba(168, 111, 82, 0.30);
+    --brown-slash: #9c7a6a;
+  }
+
+  #music-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+
+    width: 54px;
+    height: 54px;
+
+    border: none;
+    border-radius: 50%;
+
+    background: linear-gradient(
+      135deg,
+      rgba(252, 248, 245, 0.97),
+      rgba(246, 236, 229, 0.97)
+    );
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    z-index: 99999;
+    cursor: pointer;
+
+    box-shadow:
+      0 8px 22px var(--brown-shadow),
+      inset 0 0 0 1px var(--brown-border);
+
+    transition: all 0.28s ease;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+
+    padding: 0;
+  }
+
+  #music-toggle:hover {
+    transform: translateY(-3px) scale(1.03);
+
+    box-shadow:
+      0 10px 28px rgba(125, 77, 57, 0.26),
+      inset 0 0 0 1px rgba(168, 111, 82, 0.62);
+  }
+
+  #music-icon {
+    width: 31px;
+    height: 31px;
+
+    color: var(--brown-main);
+
+    filter: drop-shadow(0 2px 4px rgba(125, 77, 57, 0.16));
+
+    transition: all 0.25s ease;
+  }
+
+  /* Gạch chéo khi đang tắt */
+  #music-slash {
+    position: absolute;
+
+    width: 34px;
+    height: 2.6px;
+
+    background: linear-gradient(
+      90deg,
+      var(--brown-slash),
+      var(--brown-main)
+    );
+
+    border-radius: 20px;
+
+    transform: rotate(45deg);
+
+    opacity: 1;
+    transition: 0.25s ease;
+  }
+
+  /* Trạng thái đang phát */
+  #music-toggle.playing {
+    background: linear-gradient(
+      135deg,
+      rgba(244, 232, 224, 0.98),
+      rgba(253, 249, 246, 0.98)
+    );
+
+    box-shadow:
+      0 0 0 7px rgba(185, 123, 92, 0.15),
+      0 0 22px var(--brown-glow),
+      0 8px 24px rgba(125, 77, 57, 0.22),
+      inset 0 0 0 1px rgba(168, 111, 82, 0.78);
+  }
+
+  #music-toggle.playing #music-slash {
+    opacity: 0;
+    transform: rotate(45deg) scale(0.7);
+  }
+
+  #music-toggle.playing #music-icon {
+    color: var(--brown-dark);
+    animation: musicSpin 4.2s linear infinite;
+  }
+
+  /* Vòng sáng nâu nhẹ */
+  #music-toggle.playing::after {
+    content: "";
+    position: absolute;
+
+    width: 74px;
+    height: 74px;
+
+    border-radius: 50%;
+
+    right: -10px;
+    bottom: -10px;
+
+    z-index: -1;
+
+    background: radial-gradient(
+      circle,
+      rgba(185, 123, 92, 0.32),
+      transparent 58%
+    );
+
+    animation: brownPulse 1.9s infinite;
+  }
+
+  /* Nốt nhạc nhỏ bay nhẹ */
+  #music-toggle.playing::before {
+    content: "♪";
+    position: absolute;
+
+    top: -10px;
+    right: 2px;
+
+    font-size: 17px;
+    color: rgba(125, 77, 57, 0.72);
+
+    animation: musicFloat 1.8s ease-in-out infinite;
+  }
+
+  @keyframes musicSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes brownPulse {
+    0% { transform: scale(0.82); opacity: 0.35; }
+    70% { transform: scale(1.22); opacity: 0; }
+    100% { transform: scale(1.36); opacity: 0; }
+  }
+
+  @keyframes musicFloat {
+    0% { transform: translateY(4px) scale(0.9); opacity: 0; }
+    45% { opacity: 1; }
+    100% { transform: translateY(-10px) scale(1.12); opacity: 0; }
+  }
+
+  @media (max-width: 768px) {
+    #music-toggle { width: 50px; height: 50px; right: 16px; bottom: 16px; }
+    #music-icon { width: 29px; height: 29px; }
+  }
+</style><button id="music-toggle" type="button" aria-label="Tắt nhạc" title="Tắt nhạc" aria-pressed="true" class="playing">
 
   <svg id="music-icon" viewBox="0 0 64 64" fill="currentColor" aria-hidden="true">
     <path d="M42 9.5c1.2-.35 2.4.55 2.4 1.8v27.15c0 5.15-4.35 9.35-9.7 9.35-4.65 0-8.4-3.1-8.4-6.95s3.75-6.95 8.4-6.95c1.75 0 3.4.45 4.75 1.25V21.2l-18.9 5.35v19.1c0 5.15-4.35 9.35-9.7 9.35-4.65 0-8.4-3.1-8.4-6.95s3.75-6.95 8.4-6.95c1.75 0 3.4.45 4.75 1.25V20.3c0-1.05.7-2 1.7-2.3L42 9.5Z"></path>
@@ -170,6 +343,28 @@ html, body{height:auto !important;}
 
   addAutoPlayEvents();
   updateIcon();
+</script>
+<script>
+  // Dinh vi lai nut nhac bang visualViewport: khung thiep bi zoom ve canvas 420px
+  // (viewport meta cua LadiPage) nen "layout viewport" cao hon man hinh that, khien
+  // position:fixed bottom/right neo vao day cua khung cao hon do -> nut bi day xuong
+  // duoi man hinh, khong thay (giong BUG-34 cua man intro).
+  (function () {
+    var nut = document.getElementById('music-toggle');
+    if (!nut) return;
+    var vv = window.visualViewport;
+    function dinhVi() {
+      if (!vv) return;
+      var le = window.matchMedia('(max-width: 768px)').matches ? 16 : 20;
+      nut.style.right = 'auto';
+      nut.style.bottom = 'auto';
+      nut.style.left = Math.round(vv.offsetLeft + vv.width - nut.offsetWidth - le) + 'px';
+      nut.style.top = Math.round(vv.offsetTop + vv.height - nut.offsetHeight - le) + 'px';
+    }
+    dinhVi();
+    if (vv) { vv.addEventListener('resize', dinhVi); vv.addEventListener('scroll', dinhVi); }
+    window.addEventListener('resize', dinhVi);
+  })();
 </script>
                         <!-- PROTECT_COPY block removed: cho phep F12 -->
                         <div class="ladi-wraper"><div id="SECTION1" class="ladi-section"><div class="ladi-section-background"></div><div class="ladi-container"><div id="IMAGE1" class="ladi-element"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="IMAGE3" class="ladi-element ladi-animation"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="GROUP37" class="ladi-element ladi-animation"><div class="ladi-group"><div id="BOX1" class="ladi-element"><div class="ladi-box ladi-transition"></div></div><div id="IMAGE4" class="ladi-element"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="GROUP1" class="ladi-element"><div class="ladi-group"><div id="HEADLINE4" class="ladi-element"><h2 class="ladi-headline">đức<br><br>Thắm<br></h2> </div><div id="SHAPE1" class="ladi-element"><div class="ladi-shape"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" preserveAspectRatio="none" viewBox="0 0 1792 1896.0833" class="" fill="rgba(142, 124, 105, 1)"> <path d="M896 1664q-26 0-44-18l-624-602q-10-8-27.5-26T145 952.5 77 855 23.5 734 0 596q0-220 127-344t351-124q62 0 126.5 21.5t120 58T820 276t76 68q36-36 76-68t95.5-68.5 120-58T1314 128q224 0 351 124t127 344q0 221-229 450l-623 600q-18 18-44 18z"></path> </svg></div></div></div></div></div></div><div id="HEADLINE5" class="ladi-element ladi-animation"><h2 class="ladi-headline">27 . 10 . 2026<br></h2> </div><div id="IMAGE5" class="ladi-element ladi-animation"><div class="ladi-image"><div class="ladi-image-background"></div></div></div></div></div><div id="SECTION3" class="ladi-section"><div class="ladi-section-background"></div><div class="ladi-container"><div id="IMAGE10" class="ladi-element"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="IMAGE16" class="ladi-element ladi-animation"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="IMAGE18" class="ladi-element"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="GROUP31" class="ladi-element ladi-animation"><div class="ladi-group"><div id="IMAGE20" class="ladi-element"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="HEADLINE52" class="ladi-element"><h2 class="ladi-headline">Mãi mãi<br></h2> </div></div></div><div id="IMAGE19" class="ladi-element"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="GROUP30" class="ladi-element ladi-animation"><div class="ladi-group"><div id="IMAGE26" class="ladi-element"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="HEADLINE55" class="ladi-element ladi-animation"><h3 class="ladi-headline ladi-transition">27<br>oct<br>26<br></h3> </div></div></div></div></div><div id="SECTION2" class="ladi-section"><div class="ladi-section-background"></div><div class="ladi-container"><div id="IMAGE14" class="ladi-element"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="IMAGE6" class="ladi-element"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="IMAGE11" class="ladi-element"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="IMAGE13" class="ladi-element ladi-animation"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div data-action="true" id="GROUP12" class="ladi-element"><div class="ladi-group"><div id="GROUP10" class="ladi-element ladi-animation"><div class="ladi-group"><div id="HEADLINE6" class="ladi-element"><h1 class="ladi-headline">Ngọc Đức</h1> </div><div id="HEADLINE7" class="ladi-element"><h1 class="ladi-headline">Hồng Thắm</h1> </div></div></div><div id="HEADLINE12" class="ladi-element ladi-animation"><h3 class="ladi-headline ladi-transition">trân trọng kính mời<br></h3> </div><div id="HEADLINE13" class="ladi-element ladi-animation"><h3 class="ladi-headline ladi-transition">đến dự buổi tiệc chung vui cùng<br>gia đình chúng tôi<br></h3> </div><div id="HEADLINE15" class="ladi-element ladi-animation"><h1 class="ladi-headline">Quý Khách</h1> </div><div id="GROUP11" class="ladi-element ladi-animation"><div class="ladi-group"><div id="HEADLINE16" class="ladi-element ladi-animation"><h3 class="ladi-headline ladi-transition">tại Tư Gia Nhà Gái<br></h3> </div><div id="HEADLINE17" class="ladi-element ladi-animation"><h3 class="ladi-headline ladi-transition">Số 03 - Ngõ 04 - Thôn Phương Cơ<br>Quảng Hợp, Thanh Hoá<br></h3> </div></div></div><div id="GROUP6" class="ladi-element ladi-animation"><div class="ladi-group"><div id="HEADLINE20" class="ladi-element ladi-animation"><h2 class="ladi-headline ladi-transition">( Tức ngày 18 tháng 09 năm Bính Ngọ)</h2> </div><div id="GROUP7" class="ladi-element ladi-animation"><div class="ladi-group"><div id="HEADLINE21" class="ladi-element"><h2 class="ladi-headline">THỨ BA</h2> </div><div id="HEADLINE22" class="ladi-element"><h2 class="ladi-headline">27 . 10 . 2026</h2> </div><div id="HEADLINE23" class="ladi-element"><h2 class="ladi-headline">--:--</h2> </div><div id="LINE2" class="ladi-element"><div class="ladi-line"><div class="ladi-line-container"></div></div></div><div id="LINE3" class="ladi-element"><div class="ladi-line"><div class="ladi-line-container"></div></div></div><div id="LINE4" class="ladi-element"><div class="ladi-line"><div class="ladi-line-container"></div></div></div><div id="LINE5" class="ladi-element"><div class="ladi-line"><div class="ladi-line-container"></div></div></div></div></div></div></div><a href="https://www.google.com/maps/search/?api=1&query=Thon+Phuong+Co,+Quang+Hop,+Thanh+Hoa" target="_blank" id="GROUP8" class="ladi-element ladi-animation" data-replace-href="https://www.google.com/maps/search/?api=1&query=Thon+Phuong+Co,+Quang+Hop,+Thanh+Hoa"><div class="ladi-group"><div id="BOX6" class="ladi-element"><div class="ladi-box ladi-transition"></div></div><div id="GROUP9" class="ladi-element"><div class="ladi-group"><div id="IMAGE40" class="ladi-element"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="HEADLINE24" class="ladi-element"><h2 class="ladi-headline">Chỉ đường<br></h2> </div></div></div></div></a><div id="IMAGE41" class="ladi-element ladi-animation"><div class="ladi-image"><div class="ladi-image-background"></div></div></div></div></div><div id="HEADLINE27" class="ladi-element ladi-animation"><h3 class="ladi-headline ladi-transition">NHÀ TRAI<br>Ông: Trương Công Trường<br>Bà: Đỗ Minh Ngọc<br></h3> </div><div id="HEADLINE28" class="ladi-element ladi-animation"><h3 class="ladi-headline ladi-transition">NHÀ GÁI<br>Ông: Ngô Minh Hùng<br>Bà: Nguyễn Thị Duyên<br></h3> </div><div id="GROUP32" class="ladi-element"><div class="ladi-group"><div id="LINE6" class="ladi-element"><div class="ladi-line"><div class="ladi-line-container"></div></div></div><div id="BOX13" class="ladi-element"><div class="ladi-box ladi-transition"></div></div></div></div></div></div><div id="SECTION4" class="ladi-section"><div class="ladi-section-background"></div><div class="ladi-container"><div id="IMAGE25" class="ladi-element"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="IMAGE42" class="ladi-element"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="IMAGE43" class="ladi-element"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="IMAGE44" class="ladi-element"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="BOX7" class="ladi-element"><div class="ladi-box ladi-transition"></div></div><div id="GROUP16" class="ladi-element ladi-animation"><div class="ladi-group"><div id="HEADLINE25" class="ladi-element"><h1 class="ladi-headline">Lịch Trình</h1> </div><div id="HEADLINE26" class="ladi-element ladi-animation"><h3 class="ladi-headline ladi-transition">chương trình tiệc cưới<br></h3> </div></div></div><div id="BOX8" class="ladi-element"><div class="ladi-box ladi-transition"></div></div><div id="BOX9" class="ladi-element"><div class="ladi-box ladi-transition"></div></div><div id="BOX10" class="ladi-element"><div class="ladi-box ladi-transition"></div></div><div id="BOX11" class="ladi-element"><div class="ladi-box ladi-transition"></div></div><div id="BOX12" class="ladi-element"><div class="ladi-box ladi-transition"></div></div><div id="GROUP42" class="ladi-element ladi-animation"><div class="ladi-group"><div id="HEADLINE29" class="ladi-element"><h1 class="ladi-headline">Trang Phục</h1> </div><div id="HEADLINE30" class="ladi-element ladi-animation"><h3 class="ladi-headline ladi-transition">Trang phục lịch sự, phù hợp<br></h3> </div></div></div><div id="GROUP39" class="ladi-element ladi-animation"><div class="ladi-group"><div id="GROUP19" class="ladi-element"><div class="ladi-group"><div id="HEADLINE33" class="ladi-element"><h3 class="ladi-headline ladi-transition">--:--<br></h3> </div><div id="HEADLINE34" class="ladi-element"><h3 class="ladi-headline ladi-transition">bắt đầu lễ thành hôn<br></h3> </div></div></div><div id="IMAGE50" class="ladi-element"><div class="ladi-image"><div class="ladi-image-background"></div></div></div></div></div><div id="GROUP38" class="ladi-element ladi-animation"><div class="ladi-group"><div id="GROUP18" class="ladi-element"><div class="ladi-group"><div id="HEADLINE31" class="ladi-element"><h3 class="ladi-headline ladi-transition">--:--<br></h3> </div><div id="HEADLINE32" class="ladi-element"><h3 class="ladi-headline ladi-transition">đón tiếp khách mời<br></h3> </div></div></div><div id="IMAGE51" class="ladi-element"><div class="ladi-image"><div class="ladi-image-background"></div></div></div></div></div><div id="GROUP40" class="ladi-element ladi-animation"><div class="ladi-group"><div id="GROUP20" class="ladi-element"><div class="ladi-group"><div id="HEADLINE35" class="ladi-element"><h3 class="ladi-headline ladi-transition">--:--<br></h3> </div><div id="HEADLINE36" class="ladi-element"><h3 class="ladi-headline ladi-transition">chung vui khai tiệc<br></h3> </div></div></div><div id="IMAGE52" class="ladi-element"><div class="ladi-image"><div class="ladi-image-background"></div></div></div></div></div><div id="GROUP41" class="ladi-element ladi-animation"><div class="ladi-group"><div id="GROUP21" class="ladi-element"><div class="ladi-group"><div id="HEADLINE37" class="ladi-element"><h3 class="ladi-headline ladi-transition">--:--<br></h3> </div><div id="HEADLINE38" class="ladi-element"><h3 class="ladi-headline ladi-transition">tung hoa cưới<br></h3> </div></div></div><div id="IMAGE53" class="ladi-element"><div class="ladi-image"><div class="ladi-image-background"></div></div></div></div></div></div></div><div id="SECTION7" class="ladi-section"><div class="ladi-section-background"></div><div class="ladi-container"><div id="IMAGE54" class="ladi-element"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="IMAGE24" class="ladi-element"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="IMAGE57" class="ladi-element"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="GROUP27" class="ladi-element"><div class="ladi-group"><div id="IMAGE56" class="ladi-element ladi-animation"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="HEADLINE39" class="ladi-element ladi-animation"><h1 class="ladi-headline">Đếm Lùi</h1> </div><div id="GROUP26" class="ladi-element ladi-animation"><div class="ladi-group"><div id="BOX14" class="ladi-element"><div class="ladi-box ladi-transition"></div></div><div id="BOX15" class="ladi-element"><div class="ladi-box ladi-transition"></div></div><div id="BOX16" class="ladi-element"><div class="ladi-box ladi-transition"></div></div><div id="BOX17" class="ladi-element"><div class="ladi-box ladi-transition"></div></div><div id="GROUP24" class="ladi-element"><div class="ladi-group"><div id="HEADLINE42" class="ladi-element ladi-animation"><h1 class="ladi-headline">Ngày<br></h1> </div><div id="HEADLINE43" class="ladi-element ladi-animation"><h1 class="ladi-headline">Giờ<br></h1> </div><div id="HEADLINE44" class="ladi-element ladi-animation"><h1 class="ladi-headline">Phút<br></h1> </div><div id="HEADLINE45" class="ladi-element ladi-animation"><h1 class="ladi-headline">Giây<br></h1> </div><div id="COUNTDOWN2" class="ladi-element" data-type="endtime" data-endtime="1789837200000" data-date-start="0" data-date-end="1789837200000" data-end="true"><div class="ladi-countdown"><div id="COUNTDOWN_ITEM5" class="ladi-element" data-item-type="day"><div class="ladi-countdown-background"></div><div class="ladi-countdown-text"><span>00</span></div></div><div id="COUNTDOWN_ITEM6" class="ladi-element" data-item-type="hour"><div class="ladi-countdown-background"></div><div class="ladi-countdown-text"><span>00</span></div></div><div id="COUNTDOWN_ITEM7" class="ladi-element" data-item-type="minute"><div class="ladi-countdown-background"></div><div class="ladi-countdown-text"><span>00</span></div></div><div id="COUNTDOWN_ITEM8" class="ladi-element" data-item-type="seconds"><div class="ladi-countdown-background"></div><div class="ladi-countdown-text"><span>00</span></div></div></div></div></div></div><div id="LINE10" class="ladi-element"><div class="ladi-line"><div class="ladi-line-container"></div></div></div></div></div></div></div><div id="IMAGE60" class="ladi-element ladi-animation"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="IMAGE61" class="ladi-element ladi-animation"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="IMAGE59" class="ladi-element ladi-animation"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="HEADLINE46" class="ladi-element ladi-animation"><h3 class="ladi-headline ladi-transition">&nbsp; &nbsp; &nbsp; “Từ hai hành trình riêng biệt, chúng mình đã gặp nhau, chọn ở lại và cùng viết nên một câu chuyện mang tên chúng ta. Không cần những điều quá lớn lao, chỉ mong từ hôm nay và mãi về sau, mỗi niềm vui đều có nhau để sẻ chia, mỗi chặng đường đều có một bàn tay để nắm lấy, và mỗi ngày bình thường đều trở thành một phần thật đẹp của cuộc đời.”<br></h3> </div><div id="GROUP43" class="ladi-element ladi-animation"><div class="ladi-group"><div id="HEADLINE48" class="ladi-element"><h1 class="ladi-headline">Ngọc Đức</h1> </div><div id="HEADLINE51" class="ladi-element"><h1 class="ladi-headline">Thứ nam</h1> </div></div></div><div id="GROUP44" class="ladi-element ladi-animation"><div class="ladi-group"><div id="HEADLINE64" class="ladi-element"><h1 class="ladi-headline">Hồng Thắm<br></h1> </div><div id="HEADLINE65" class="ladi-element"><h1 class="ladi-headline">Trưởng nữ</h1> </div></div></div></div></div><div id="SECTION8" class="ladi-section"><div class="ladi-section-background"></div><div class="ladi-container"><div id="IMAGE72" class="ladi-element"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="IMAGE66" class="ladi-element"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="IMAGE65" class="ladi-element"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="HEADLINE56" class="ladi-element ladi-animation"><h1 class="ladi-headline">The</h1> </div><div id="HEADLINE57" class="ladi-element ladi-animation"><h1 class="ladi-headline">Album</h1> </div><div id="GROUP33" class="ladi-element ladi-animation"><div class="ladi-group"><div id="LINE17" class="ladi-element"><div class="ladi-line"><div class="ladi-line-container"></div></div></div><div id="BOX18" class="ladi-element"><div class="ladi-box ladi-transition"></div></div></div></div><div id="IMAGE68" class="ladi-element ladi-animation"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="IMAGE69" class="ladi-element ladi-animation"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="IMAGE70" class="ladi-element ladi-animation"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="GROUP45" class="ladi-element ladi-animation"><div class="ladi-group"><div id="BOX19" class="ladi-element"><div class="ladi-box ladi-transition"></div></div><div id="HEADLINE58" class="ladi-element ladi-animation"><h1 class="ladi-headline">Affection</h1> </div><div id="HEADLINE59" class="ladi-element ladi-animation"><h1 class="ladi-headline">whispers<br></h1> </div><div id="HEADLINE60" class="ladi-element ladi-animation"><h1 class="ladi-headline">TWO HEARTS<br>ONE LOVE</h1> </div></div></div><div id="GROUP35" class="ladi-element ladi-animation"><div class="ladi-group"><div id="LINE18" class="ladi-element"><div class="ladi-line"><div class="ladi-line-container"></div></div></div><div id="BOX20" class="ladi-element"><div class="ladi-box ladi-transition"></div></div></div></div></div></div><div id="SECTION9" class="ladi-section"><div class="ladi-section-background"></div><div class="ladi-container"><div id="IMAGE73" class="ladi-element"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="GALLERY1" class="ladi-element" data-max-item="12" data-runtime-id="uObIjwhzvR" data-current="5" data-is-next="true" data-scrolled="true" data-loaded="true" data-next-time="1789871591336"><div class="ladi-gallery ladi-gallery-bottom"><div class="ladi-gallery-view" style="cursor: pointer;"><div class="ladi-gallery-view-arrow ladi-gallery-view-arrow-left"></div><div class="ladi-gallery-view-arrow ladi-gallery-view-arrow-right"></div><div class="ladi-gallery-view-item" data-index="0" data-lazyload="true"></div><div class="ladi-gallery-view-item" data-index="1"></div><div class="ladi-gallery-view-item" data-index="2"></div><div class="ladi-gallery-view-item" data-index="3"></div><div class="ladi-gallery-view-item" data-index="4"></div><div class="ladi-gallery-view-item selected" data-index="5" style=""></div><div class="ladi-gallery-view-item" data-index="6" style=""></div><div class="ladi-gallery-view-item" data-index="7"></div><div class="ladi-gallery-view-item" data-index="8"></div><div class="ladi-gallery-view-item" data-index="9"></div><div class="ladi-gallery-view-item" data-index="10"></div><div class="ladi-gallery-view-item" data-index="11"></div></div><div class="ladi-gallery-control"><div class="ladi-gallery-control-box" style="left: -280px;"><div class="ladi-gallery-control-item" data-index="0"></div><div class="ladi-gallery-control-item" data-index="1"></div><div class="ladi-gallery-control-item" data-index="2"></div><div class="ladi-gallery-control-item" data-index="3"></div><div class="ladi-gallery-control-item" data-index="4"></div><div class="ladi-gallery-control-item selected" data-index="5"></div><div class="ladi-gallery-control-item" data-index="6"></div><div class="ladi-gallery-control-item" data-index="7"></div><div class="ladi-gallery-control-item" data-index="8"></div><div class="ladi-gallery-control-item" data-index="9"></div><div class="ladi-gallery-control-item" data-index="10"></div><div class="ladi-gallery-control-item" data-index="11"></div></div><div class="ladi-gallery-control-arrow ladi-gallery-control-arrow-left"></div><div class="ladi-gallery-control-arrow ladi-gallery-control-arrow-right"></div></div></div></div></div></div><div id="SECTION10" class="ladi-section"><div class="ladi-section-background"></div><div class="ladi-container"><div id="IMAGE74" class="ladi-element"><div class="ladi-image"><div class="ladi-image-background"></div></div></div><div id="GROUP36" class="ladi-element"><div class="ladi-group"><div id="FORM2" is_auto_funnel="" data-config-id="6a1c47b43c9c2f0038773866" class="ladi-element ladi-animation"><form autocomplete="off" method="post" class="ladi-form"><div id="BUTTON2" class="ladi-element"><div class="ladi-button"><div class="ladi-button-background"></div><div id="BUTTON_TEXT2" class="ladi-element ladi-button-headline"><p class="ladi-headline">XÁC NHẬN</p> </div></div></div><div id="FORM_ITEM2" class="ladi-element"><div class="ladi-form-item-container"><div class="ladi-form-item-background"></div><div class="ladi-form-item"><input autocomplete="off" tabindex="1" name="name" required="" class="ladi-form-control" type="text" placeholder="Tên của bạn" value=""></div></div></div><div id="FORM_ITEM3" class="ladi-element"><div class="ladi-form-item-container"><div class="ladi-form-item-background"></div><div class="ladi-form-item"><textarea autocomplete="off" tabindex="2" name="message" class="ladi-form-control" placeholder="Gửi lời chúc đến cô dâu chú rể"></textarea></div></div></div><div id="FORM_ITEM4" class="ladi-element"><div class="ladi-form-item-container"><div class="ladi-form-item-background"></div><div class="ladi-form-item"><select tabindex="3" name="form_item8" class="ladi-form-control ladi-form-control-select" data-selected=""><option value="">Xác nhận tham dự?</option><option value="Tôi sẽ tham dự">Tôi sẽ tham dự</option><option value="Xin lỗi, tôi không thể tham dự">Xin lỗi, tôi không thể tham dự</option></select></div></div></div><div id="FORM_ITEM5" class="ladi-element"><div class="ladi-form-item-container"><div class="ladi-form-item-background"></div><div class="ladi-form-item"><input autocomplete="off" tabindex="4" name="form_item9" class="ladi-form-control" type="text" placeholder="Bạn có tham dự cùng ai khác không?" value=""></div></div></div><div id="FORM_ITEM6" class="ladi-element"><div class="ladi-form-item-container"><div class="ladi-form-item-background"></div><div class="ladi-form-item"><select tabindex="5" name="form_item10" class="ladi-form-control ladi-form-control-select" data-selected=""><option value="">Bạn là khách mời của ai?</option><option value="Khách mời cô dâu">Khách mời cô dâu</option><option value="Khách mời chú rể">Khách mời chú rể</option></select></div></div></div><button type="submit" class="ladi-hidden"></button></form></div><div id="HEADLINE62" class="ladi-element ladi-animation"><h3 class="ladi-headline">Vui lòng xác nhận sự tham dự của bạn để chúng mình chuẩn bị đón tiếp một cách chu đáo nhất.
