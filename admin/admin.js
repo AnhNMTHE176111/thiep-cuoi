@@ -59,20 +59,10 @@
   }
   // Ban tieng Duc: cung trang thiep, them ?lang=de la thiep tu doi chu sang tieng Duc.
   function linkDuc(url) { return url + (url.indexOf('?') >= 0 ? '&' : '?') + 'lang=de'; }
-  // O tick "Link tiếng Đức": bat -> MOI nut chep link / mo link thiep deu ra ban tieng Duc.
-  // Nho theo trinh duyet (localStorage) de khong phai tick lai moi lan mo admin.
-  function dungTiengDuc() { try { return localStorage.getItem('thiep_link_de') === '1'; } catch (e) { return false; } }
-  function linkGui(url) { return dungTiengDuc() ? linkDuc(url) : url; }
-  function oTickTiengDuc() {
-    var o = el('input', { type: 'checkbox', style: 'width:18px;height:18px;margin:0;accent-color:#8E7C69' });
-    o.checked = dungTiengDuc();
-    o.addEventListener('change', function () {
-      try { localStorage.setItem('thiep_link_de', o.checked ? '1' : '0'); } catch (e) {}
-      thongBao(o.checked ? 'Từ giờ chép link ra bản tiếng Đức' : 'Từ giờ chép link ra bản tiếng Việt');
-      veCum(cumHienTai);
-    });
-    return el('label', { style: 'display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;user-select:none' },
-      [o, '🇩🇪 Link tiếng Đức']);
+  // Link gui cho 1 khach: khach duoc tick "Tiếng Đức" (cot tren Sheet) -> them lang=de.
+  function linkKhach(k) {
+    var u = linkThiep(k.ban, k.ma, k.hienThi);
+    return k.tiengDuc ? linkDuc(u) : u;
   }
 
   // ---------- tien ich chung ----------
@@ -571,14 +561,14 @@
     }
     var khung = el('div', { class: 'khung' });
     khung.appendChild(el('h3', {}, ['Link thiệp']));
-    khung.appendChild(oTickTiengDuc());
     ['nha_trai', 'nha_gai'].forEach(function (ma) {
-      var url = linkGui(linkThiep(ma));
+      var url = linkThiep(ma);
       var hang = el('div', { style: 'display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0ebe3' }, [
         el('div', {}, [el('b', {}, [ma === 'nha_trai' ? 'Nhà trai' : 'Nhà gái']), el('div', { class: 'muc-nho' }, [url])]),
       ]);
       var nutChep = el('button', { class: 'nut nho', type: 'button', onclick: function () { navigator.clipboard.writeText(url); thongBao('Đã chép link'); } }, ['Chép link']);
-      hang.appendChild(nutChep);
+      var nutDuc = el('button', { class: 'nut nho', type: 'button', onclick: function () { navigator.clipboard.writeText(linkDuc(url)); thongBao('Đã chép link tiếng Đức'); } }, ['🇩🇪 Tiếng Đức']);
+      hang.appendChild(el('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end' }, [nutChep, nutDuc]));
       khung.appendChild(hang);
     });
     cum.appendChild(khung);
@@ -1072,7 +1062,7 @@
   }
 
   function veTheKhach(k) {
-    var url = linkGui(linkThiep(k.ban, k.ma, k.hienThi));
+    var url = linkKhach(k);
     var dangLuu = !!KHACH_DANG_LUU[k.ma];
     var the = el('div', { class: 'khach-the' });
 
@@ -1108,10 +1098,27 @@
       title: chuaRoBan ? 'Chọn Nhà trai hoặc Nhà gái ở góc trên thẻ này trước' : null, onclick: function () {
       chepClipboardAnToan(url);
       if (!k.daGui) { suaKhachTrenSheet(k, { daGui: true }, null, true); }
-      thongBao('Đã chép link' + (dungTiengDuc() ? ' tiếng Đức' : '') + ' của ' + k.hienThi);
+      thongBao('Đã chép link' + (k.tiengDuc ? ' tiếng Đức' : '') + ' của ' + k.hienThi);
     } }, ['📋 Chép link']);
     var nutSua = el('button', { class: 'nut nho', type: 'button', disabled: dangLuu ? 'true' : null, onclick: function () { oHienThi.focus(); oHienThi.select(); } }, ['✏️']);
     var nutXoa = el('button', { class: 'nut nho nguy', type: 'button', disabled: dangLuu ? 'true' : null, onclick: function () { xoaKhachHoi(k); } }, ['🗑']);
+    var oDuc = el('input', { type: 'checkbox', disabled: dangLuu ? 'true' : null });
+    oDuc.checked = !!k.tiengDuc;
+    oDuc.addEventListener('change', function () {
+      var muon = oDuc.checked;
+      suaKhachTrenSheet(k, { tiengDuc: muon }, oDuc, true).then(function () {
+        var moi = khach.filter(function (x) { return x.ma === k.ma; })[0];
+        // Apps Script ban cu khong biet cot "Tiếng Đức" -> tra ve khong co truong nay
+        if (moi && moi.tiengDuc === undefined) {
+          thongBao('Chưa lưu được: Apps Script trên Google còn bản cũ. Vào Cài đặt → "Chép mã", dán đè lên Apps Script rồi Deploy lại (New version).', 'loi');
+        } else if (moi) {
+          thongBao(muon ? 'Link của ' + k.hienThi + ' giờ là bản tiếng Đức' : 'Link của ' + k.hienThi + ' giờ là bản tiếng Việt', 'ok');
+        }
+      });
+    });
+    the.appendChild(el('div', { style: 'margin-top:6px' }, [
+      el('label', { class: 'tick-duc', title: 'Tick nếu khách này nhận thiệp tiếng Đức' }, [oDuc, '🇩🇪 Gửi thiệp tiếng Đức']),
+    ]));
     hangDuoi.appendChild(nutChep); hangDuoi.appendChild(nutSua); hangDuoi.appendChild(nutXoa);
     the.appendChild(hangDuoi);
     if (dangLuu) the.appendChild(el('p', { class: 'muc-nho', style: 'margin-top:4px' }, ['Đang lưu…']));
@@ -1148,7 +1155,6 @@
     var urlSheet = ((duLieu.rsvp && duLieu.rsvp.sheetUrl) || '').trim();
     cum.appendChild(el('div', { style: 'margin-bottom:12px;display:flex;align-items:center;gap:16px;flex-wrap:wrap' }, [
       urlSheet ? el('a', { class: 'nut nho', href: urlSheet, target: '_blank', rel: 'noopener', style: 'text-decoration:none;display:inline-block' }, ['📊 Mở Google Sheet']) : null,
-      oTickTiengDuc(),
     ]));
 
     // ----- them 1 khach -----
@@ -1156,17 +1162,20 @@
     var dxInput = el('input', { type: 'text', placeholder: 'Danh xưng (vd: em, anh, chú)' });
     var tenInput = el('input', { type: 'text', placeholder: 'Tên khách' });
     var banSelect = el('select', {}, [el('option', { value: 'nha_trai' }, ['Nhà trai']), el('option', { value: 'nha_gai' }, ['Nhà gái'])]);
+    var oDucMoi = el('input', { type: 'checkbox' });
+    var nhanDucMoi = el('label', { class: 'tick-duc', title: 'Tick nếu khách này nhận thiệp tiếng Đức' }, [oDucMoi, '🇩🇪 Thiệp tiếng Đức']);
     var nutThem = el('button', { class: 'nut chinh', type: 'button', onclick: function () {
       if (!tenInput.value.trim()) { thongBao('Nhập tên khách trước đã', 'loi'); return; }
       var hienThi = chuanHoaTenKhach(dxInput.value, tenInput.value);
       var trung = khach.filter(function (k) { return (k.hienThi || '').toLowerCase() === hienThi.toLowerCase(); });
       if (trung.length && !confirm('Đã có khách tên "' + hienThi + '" trong danh sách. Vẫn thêm một người nữa?')) return;
       var maMoi = taoMaKhach();
-      chepClipboardAnToan(linkGui(linkThiep(banSelect.value, maMoi, hienThi))); // chep NGAY trong cu bam
-      themKhachLenSheet([{ ma: maMoi, danhXung: dxInput.value.trim(), ten: tenInput.value.trim(), hienThi: hienThi, ban: banSelect.value, daGui: false }], nutThem, maMoi)
-        .then(function () { dxInput.value = ''; tenInput.value = ''; });
+      var duc = oDucMoi.checked;
+      chepClipboardAnToan(linkKhach({ ban: banSelect.value, ma: maMoi, hienThi: hienThi, tiengDuc: duc })); // chep NGAY trong cu bam
+      themKhachLenSheet([{ ma: maMoi, danhXung: dxInput.value.trim(), ten: tenInput.value.trim(), hienThi: hienThi, ban: banSelect.value, daGui: false, tiengDuc: duc }], nutThem, maMoi)
+        .then(function () { dxInput.value = ''; tenInput.value = ''; oDucMoi.checked = false; });
     } }, ['+ Thêm khách']);
-    toolbar.appendChild(dxInput); toolbar.appendChild(tenInput); toolbar.appendChild(banSelect); toolbar.appendChild(nutThem);
+    toolbar.appendChild(dxInput); toolbar.appendChild(tenInput); toolbar.appendChild(banSelect); toolbar.appendChild(nhanDucMoi); toolbar.appendChild(nutThem);
     cum.appendChild(toolbar);
 
     // ----- nhap loat tu Excel/Zalo, co xem truoc truoc khi gui len Sheet -----
@@ -1258,7 +1267,7 @@
           dong.push([
             k.danhXung || '', k.ten || '', k.hienThi || '',
             k.ban === 'nha_trai' ? 'Nha trai' : 'Nha gai', k.ma,
-            linkThiep(k.ban, k.ma, k.hienThi), k.daGui ? 'x' : '', k.daPhanHoi ? 'x' : '', k.tinhTrangDen || '',
+            linkKhach(k), k.daGui ? 'x' : '', k.daPhanHoi ? 'x' : '', k.tinhTrangDen || '',
           ].map(q).join(','));
         });
         var blob = new Blob(['﻿' + dong.join('\r\n')], { type: 'text/csv;charset=utf-8' });
@@ -1489,7 +1498,7 @@
       veXemTruocNgay();
     });
     document.getElementById('nutXemLink').addEventListener('click', function () {
-      window.open(linkGui(linkThiep(banXem)), '_blank');
+      window.open(linkThiep(banXem), '_blank');
     });
     document.getElementById('nutDang').addEventListener('click', function () { dang(); });
     document.getElementById('nutMenu').addEventListener('click', function () { document.body.classList.toggle('mo-menu'); });

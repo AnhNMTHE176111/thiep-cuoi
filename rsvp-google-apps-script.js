@@ -64,6 +64,11 @@ var COT_KHACH = [
   { khoa: 'tinhTrangDen', nhan: 'Có tham dự?' },
   { khoa: 'loiChuc', nhan: 'Lời chúc' },
 ];
+// Cot "Tiếng Đức" (tick = khach nhan thiep tieng Duc, admin them &lang=de vao link).
+// KHONG nam trong COT_KHACH o vi tri co dinh: Sheet tao tu ban script cu co the dang dung
+// cot K de ghi chu -> tim cot theo TIEU DE, chua co thi tao o cot trong dau tien ben phai.
+var NHAN_COT_DUC = 'Tiếng Đức';
+var cotDucDaTim_ = 0; // nho trong 1 lan chay, tranh doc lai dong tieu de nhieu lan
 var SO_COT = COT_KHACH.length;
 var VI_TRI = {};
 COT_KHACH.forEach(function (c, i) { VI_TRI[c.khoa] = i; });
@@ -199,8 +204,28 @@ function layTrangKhach_() {
   }
   // cot Ma luon la VAN BAN (dat lai moi lan cho ca Sheet tao tu ban script cu)
   trang.getRange(1, 1, trang.getMaxRows(), 1).setNumberFormat('@');
+  datCotDuc_(trang);
   datOTick_(trang);
   return trang;
+}
+
+// So cot (tinh tu 1) cua cot "Tiếng Đức"; chua co thi them tieu de o cot trong ben phai.
+function datCotDuc_(trang) {
+  var soCot = Math.max(trang.getLastColumn(), SO_COT);
+  var dau = trang.getRange(1, 1, 1, soCot).getValues()[0];
+  for (var i = SO_COT; i < dau.length; i++) {
+    if (String(dau[i] || '').trim() === NHAN_COT_DUC) { cotDucDaTim_ = i + 1; return i + 1; }
+  }
+  var cot = soCot + 1;
+  trang.getRange(1, cot).setValue(NHAN_COT_DUC).setFontWeight('bold').setBackground('#8E7C69').setFontColor('#ffffff');
+  cotDucDaTim_ = cot;
+  return cot;
+}
+function cotDuc_(trang) { return cotDucDaTim_ || datCotDuc_(trang); }
+function docDuc_(trang) {
+  var soDong = trang.getLastRow() - 1;
+  if (soDong <= 0) return [];
+  return trang.getRange(2, cotDuc_(trang), soDong, 1).getValues().map(function (h) { return laDung_(h[0]); });
 }
 
 // "Da gui" / "Da phan hoi" hien o tick thay vi chu TRUE/FALSE.
@@ -210,7 +235,7 @@ function datOTick_(trang) {
   var cuoi = trang.getMaxRows();
   if (cuoi < 2) return;
   var tick = SpreadsheetApp.newDataValidation().requireCheckbox().build();
-  [VI_TRI.daGui, VI_TRI.daPhanHoi].forEach(function (i) {
+  [VI_TRI.daGui, VI_TRI.daPhanHoi, cotDuc_(trang) - 1].forEach(function (i) {
     var dv = trang.getRange(cuoi, i + 1).getDataValidation();
     if (dv && dv.getCriteriaType() === SpreadsheetApp.DataValidationCriteria.CHECKBOX) return; // da dat roi
     trang.getRange(2, i + 1, cuoi - 1, 1).setDataValidation(tick);
@@ -262,7 +287,13 @@ function hangThanhKhach_(h) {
 }
 
 function docKhach_() {
-  return docGia_(layTrangKhach_()).map(hangThanhKhach_).filter(function (o) { return o.ma; });
+  var trang = layTrangKhach_();
+  var duc = docDuc_(trang);
+  return docGia_(trang).map(function (h, i) {
+    var o = hangThanhKhach_(h);
+    o.tiengDuc = !!duc[i];
+    return o;
+  }).filter(function (o) { return o.ma; });
 }
 
 // so dong (tinh tu 1, gom ca dong tieu de) cua khach co ma nay, -1 neu khong co
@@ -277,7 +308,7 @@ function timDong_(trang, ma) {
 function traKhachTheoMa_(ma) {
   var ds = docKhach_();
   for (var i = 0; i < ds.length; i++) {
-    if (ds[i].ma === ma) return { ok: true, hienThi: ds[i].hienThi, ban: ds[i].ban };
+    if (ds[i].ma === ma) return { ok: true, hienThi: ds[i].hienThi, ban: ds[i].ban, tiengDuc: ds[i].tiengDuc };
   }
   return { ok: false };
 }
@@ -300,6 +331,7 @@ function luuKhach_(dsGui) {
       if (k.ban != null) h[VI_TRI.ban] = nhanBan_(maBan_(k.ban)) || h[VI_TRI.ban];
       if (k.daGui != null) h[VI_TRI.daGui] = !!k.daGui;
       o.setValues([h]);
+      if (k.tiengDuc != null) trang.getRange(dong, cotDuc_(trang)).setValue(!!k.tiengDuc);
       return;
     }
     // ma client tu tao (de chep link ngay luc bam) duoc giu nguyen neu chua ai dung;
@@ -319,6 +351,7 @@ function luuKhach_(dsGui) {
       loiChuc: '',
     };
     trang.appendRow(COT_KHACH.map(function (c) { return moi[c.khoa]; }));
+    trang.getRange(trang.getLastRow(), cotDuc_(trang)).setValue(!!k.tiengDuc);
   });
   return docKhach_();
 }
