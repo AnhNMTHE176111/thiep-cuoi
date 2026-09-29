@@ -437,6 +437,207 @@
       '</div>',
     ].join('\n');
   }
+  // ----- ban tieng Duc (?lang=de) -----
+  // Bang dich cho chu nhap tu du-lieu.json. Khoa = chu tieng Viet da bo the, viet HOA.
+  var DICH_DE = {
+    // ten moc chuong trinh / su kien
+    'CHECK IN CHỤP ẢNH': 'CHECK-IN & FOTOS',
+    'LỄ THÀNH HÔN': 'TRAUUNG',
+    'CHUNG VUI KHAI TIỆC': 'FESTESSEN',
+    'KHAI TIỆC': 'FESTESSEN',
+    'TUNG HOA CƯỚI': 'BRAUTSTRAUSSWURF',
+    'LỄ NẠP TÀI': 'VERLOBUNGSFEIER',
+    'LỄ ĂN HỎI': 'VERLOBUNGSFEIER',
+    'BỮA CƠM THÂN MẬT': 'FAMILIENESSEN',
+    'ĐÓN KHÁCH': 'EMPFANG DER GÄSTE',
+    'ĐÓN TIẾP KHÁCH MỜI': 'EMPFANG DER GÄSTE',
+    'LỄ RƯỚC DÂU': 'ABHOLUNG DER BRAUT',
+    'LỄ VU QUY': 'ABSCHIED DER BRAUT',
+    // loi moi
+    'ĐẾN DỰ BỮA TIỆC CHUNG VUI CÙNG GIA ĐÌNH CHÚNG TÔI': 'ZU UNSERER HOCHZEITSFEIER<br>IM KREISE UNSERER FAMILIEN',
+    'TỚI DỰ BỮA CƠM THÂN MẬT CHUNG VUI CÙNG GIA ĐÌNH CHÚNG TÔI': 'ZU EINEM FAMILIÄREN ABENDESSEN<br>IM KREISE UNSERER FAMILIE',
+    // dia diem
+    'TƯ GIA NHÀ GÁI': 'ELTERNHAUS DER BRAUT',
+    'TƯ GIA NHÀ TRAI': 'ELTERNHAUS DES BRÄUTIGAMS',
+    // thu bac
+    'TRƯỞNG NAM': 'Ältester Sohn', 'THỨ NAM': 'Sohn', 'ÚT NAM': 'Jüngster Sohn', 'CON TRAI': 'Sohn',
+    'TRƯỞNG NỮ': 'Älteste Tochter', 'THỨ NỮ': 'Tochter', 'ÚT NỮ': 'Jüngste Tochter', 'CON GÁI': 'Tochter',
+    // mau dresscode
+    'KEM': 'Creme', 'BE': 'Beige', 'NÂU': 'Braun', 'HỒNG': 'Rosa', 'TRẮNG': 'Weiß', 'ĐEN': 'Schwarz',
+    'XÁM': 'Grau', 'GHI': 'Grau', 'XANH': 'Blau', 'XANH LÁ': 'Grün', 'XANH DƯƠNG': 'Blau',
+    'XANH NAVY': 'Navy', 'ĐỎ': 'Rot', 'VÀNG': 'Gelb', 'TÍM': 'Lila', 'CAM': 'Orange', 'BẠC': 'Silber',
+    // nhan tieu de
+    'TIMELINE': 'Zeitplan', 'LỊCH TRÌNH': 'Zeitplan',
+    'CHƯƠNG TRÌNH TIỆC CƯỚI': 'ABLAUF DER FEIER',
+    'DRESSCODE': 'Dresscode', 'TRANG PHỤC': 'Dresscode',
+    'FOREVER': 'Forever', 'MÃI MÃI': 'Für immer',
+  };
+  var THU_DE = ['SONNTAG', 'MONTAG', 'DIENSTAG', 'MITTWOCH', 'DONNERSTAG', 'FREITAG', 'SAMSTAG'];
+  var THANG_DE = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+  // nam am lich: Can -> ngu hanh, Chi -> con giap
+  var CAN_DE = ['Holz', 'Holz', 'Feuer', 'Feuer', 'Erde', 'Erde', 'Metall', 'Metall', 'Wasser', 'Wasser'];
+  var CHI_DE_GEN = ['Ratte', 'Büffels', 'Tigers', 'Katze', 'Drachen', 'Schlange', 'Pferdes', 'Ziege', 'Affen', 'Hahns', 'Hundes', 'Schweins'];
+  var CHI_DE_NU = [1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0]; // giong cai -> "der", con lai "des"
+  function namAmDe(nam) {
+    var chi = (nam + 8) % 12;
+    return 'Jahr ' + (CHI_DE_NU[chi] ? 'der ' : 'des ') + CAN_DE[(nam + 6) % 10] + '-' + CHI_DE_GEN[chi];
+  }
+  function khoaDich(v) {
+    return boThe(String(v == null ? '' : v).replace(/<br\s*\/?>/gi, ' ')).toUpperCase();
+  }
+  function bangDichDuc(o) {
+    var du = o.du, b = o.b, c = o.c;
+    var thieu = [];
+    function dich(v) {
+      var k = khoaDich(v);
+      if (!k) return '';
+      if (Object.prototype.hasOwnProperty.call(DICH_DE, k)) return DICH_DE[k];
+      // chu khong dau (ten rieng kieu "STAR GALAXY") thi coi nhu dung duoc luon
+      if (/[^ -]/.test(k) && thieu.indexOf(k) < 0) thieu.push(k);
+      return v;
+    }
+    function dichDiaChi(v) {
+      return String(v == null ? '' : v)
+        .replace(/Trung tâm tiệc cưới/gi, 'Hochzeitscenter')
+        .replace(/Tầng\s*(\d+)/gi, '$1. Etage');
+    }
+    var h = [];
+    function them(id, html) { h.push([id, sachChoThiep(html)]); }
+    var nhan = du.nhan || {};
+    var sk = o.skChinh, dd = o.ddChinh;
+    var p = sk.ngayDuong.split('-');
+    var al = amLich(sk.ngayDuong);
+    var thu = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])).getUTCDay();
+
+    them('HEADLINE12', 'wir laden herzlich ein');
+    them('HEADLINE13', dich(b.loiMoi));
+    them('HEADLINE15', 'Liebe Gäste');
+    them('HEADLINE16', boThe(dich(dd.ten)));
+    them('HEADLINE17', dichDiaChi(dd.diaChi));
+    them('HEADLINE20', '( Mondkalender: ' + String(al.ngay).padStart(2, '0') + '.' + String(al.thang).padStart(2, '0') + '. – ' + namAmDe(al.nam) + ' )');
+    them('HEADLINE21', THU_DE[thu]);
+    them('HEADLINE55', p[2] + '<br>' + THANG_DE[+p[1] - 1] + '<br>' + p[0]);
+    them('HEADLINE24', 'Route');
+    var nhaTruoc = o.coDauTruoc ? 'BRAUTELTERN' : 'BRÄUTIGAMSELTERN';
+    var nhaSau = o.coDauTruoc ? 'BRÄUTIGAMSELTERN' : 'BRAUTELTERN';
+    var dTruoc = o.coDauTruoc ? c.nhaGai : c.nhaTrai;
+    var dSau = o.coDauTruoc ? c.nhaTrai : c.nhaGai;
+    them('HEADLINE27', nhaTruoc + '<br>Herr ' + boThe(dTruoc.ong) + '<br>Frau ' + boThe(dTruoc.ba));
+    them('HEADLINE28', nhaSau + '<br>Herr ' + boThe(dSau.ong) + '<br>Frau ' + boThe(dSau.ba));
+    them('HEADLINE25', dich(nhan.lichTrinhTieuDe || 'Timeline'));
+    them('HEADLINE26', dich(nhan.chuongTrinhTieuDe || 'CHƯƠNG TRÌNH TIỆC CƯỚI'));
+    them('HEADLINE52', dich(nhan.maiMai || 'Forever'));
+    them('HEADLINE29', dich(nhan.trangPhucTieuDe || 'Dresscode'));
+    ['HEADLINE32', 'HEADLINE34', 'HEADLINE36', 'HEADLINE38'].forEach(function (id, i) {
+      if (o.ct[i]) them(id, boThe(dich(o.ct[i].nhan)));
+    });
+    them('HEADLINE39', 'Countdown');
+    them('HEADLINE42', 'Tage');
+    them('HEADLINE43', 'Stunden');
+    them('HEADLINE44', 'Minuten');
+    them('HEADLINE45', 'Sekunden');
+    //   thay cho &nbsp; (them() escape dau "&"). Doan nay dai ngang ban Viet de
+    // khong day chu xuong de len ten co dau chu re ben duoi (khung LadiPage co dinh).
+    them('HEADLINE46', '      „Aus zwei getrennten Wegen haben wir zueinander gefunden und beschlossen, ' +
+      'gemeinsam eine Geschichte zu schreiben, die unsere Namen trägt. Wir wünschen uns nichts Großes – nur, dass ' +
+      'wir von heute an jede Freude teilen, auf jedem Weg eine Hand zum Festhalten haben und jeder gewöhnliche Tag ' +
+      'ein schöner Teil unseres Lebens wird.“');
+    var dauTren = o.coDauTruoc ? c.coDau : c.chuRe;
+    var dauDuoi = o.coDauTruoc ? c.chuRe : c.coDau;
+    them('HEADLINE51', boThe(dich(dauTren.thuBac)));
+    them('HEADLINE65', boThe(dich(dauDuoi.thuBac)));
+    them('HEADLINE62', 'Bitte bestätigen Sie Ihre Teilnahme, damit wir Sie bestmöglich empfangen können. <br>Herzlichen Dank!<br>');
+    them('HEADLINE63', 'Vielen Dank!');
+    them('HEADLINE66', 'Danke für Ihre Rückmeldung<br>');
+    them('HEADLINE67', 'Vielen Dank!<br>');
+    them('BUTTON_TEXT2', 'BESTÄTIGEN');
+    // dresscode: cham mau giu nguyen, chi doi ten mau
+    var dresscodeHtml = o.mauCoTen.length
+      ? o.mauCoTen.map(function (m) { return chamMau(m.hex) + escHtml(boThe(dich(m.ten))); }).join(' · ')
+      : 'ELEGANTE KLEIDUNG';
+    var tieuDe = 'Hochzeitseinladung ' + boThe(o.tenTren) + ' & ' + boThe(o.tenDuoi);
+    return {
+      thieu: thieu,
+      intro: {
+        q: [
+          ['#thiep-intro .ti-invite', 'Wir laden herzlich ein'],
+          ['#thiep-intro-khach', 'Liebe Gäste'],
+          ['#thiep-intro .ti-message', 'ZU UNSERER HOCHZEIT'],
+          ['#thiep-intro .ti-hint', 'Zum Öffnen tippen'],
+        ],
+        attr: [['#thiep-intro', 'aria-label', 'Tippen oder nach oben wischen, um die Einladung zu öffnen']],
+        title: tieuDe,
+      },
+      than: {
+        h: h,
+        q: [
+          ['#HEADLINE30 > .ladi-headline', dresscodeHtml],
+          ['#thiep-cam-on > div > div:nth-child(2)', 'Vielen Dank!'],
+          ['#thiep-cam-on > div > div:nth-child(3)', 'Ihre Glückwünsche sind bei uns angekommen. Wir freuen uns sehr auf Sie!'],
+          ['#thiep-cam-on button', 'Schließen'],
+        ],
+        attr: [
+          ['#FORM2 [name="name"]', 'placeholder', 'Ihr Name'],
+          ['#FORM2 [name="message"]', 'placeholder', 'Ihre Glückwünsche an das Brautpaar'],
+          ['#FORM2 [name="form_item9"]', 'placeholder', 'Kommen Sie in Begleitung?'],
+        ],
+        // [ten o chon, value, chu hien] — CHI doi chu hien, value giu tieng Viet de
+        // Google Sheet / Apps Script van hieu dung "co tham du" hay khong.
+        opt: [
+          ['form_item8', '', 'Nehmen Sie teil?'],
+          ['form_item8', 'Tôi sẽ tham dự', 'Ja, ich komme gerne'],
+          ['form_item8', 'Xin lỗi, tôi không thể tham dự', 'Leider kann ich nicht kommen'],
+          ['form_item10', '', 'Sie sind Gast von …'],
+          ['form_item10', 'Khách mời cô dâu', 'Gast der Braut'],
+          ['form_item10', 'Khách mời chú rể', 'Gast des Bräutigams'],
+        ],
+      },
+    };
+  }
+  // Script doi chu sang tieng Duc khi link co ?lang=de (chap nhan ca de-DE, DE...).
+  function jsDichDuc(d, laIntro) {
+    var json = JSON.stringify(d).replace(/</g, '\\u003c');
+    return [
+      '<script>(function(){',
+      '  var l = "";',
+      '  try { l = (new URLSearchParams(location.search).get("lang") || "").toLowerCase(); } catch (e) {}',
+      '  if (l.slice(0, 2) !== "de") return;',
+      '  var D = ' + json + ';',
+      laIntro ? '  document.documentElement.lang = "de"; window.THIEP_LANG = "de";' : '',
+      laIntro ? '  if (D.title) document.title = D.title;' : '',
+      '  var vua = [];',
+      '  function tat(sel, f) { var ds = document.querySelectorAll(sel); for (var i = 0; i < ds.length; i++) f(ds[i]); }',
+      '  (D.h || []).forEach(function (p) {',
+      '    var w = document.getElementById(p[0]);',
+      '    var t = w && (w.querySelector(".ladi-headline") || w);',
+      '    if (t) { t.innerHTML = p[1]; if (p[1].length < 90) vua.push([t, p[1].split("<br>").filter(function (x) { return x.trim(); }).length || 1]); }',
+      '  });',
+      '  (D.q || []).forEach(function (p) { tat(p[0], function (e) { e.innerHTML = p[1]; }); });',
+      '  (D.attr || []).forEach(function (p) { tat(p[0], function (e) { e.setAttribute(p[1], p[2]); }); });',
+      // Chu Duc dai hon chu Viet ma khung LadiPage rong co dinh -> dong ngan (ten moc,
+      // thu trong tuan, "Sekunden"...) bi xuong dong. Thu nho dan cho moi doan <br> nam
+      // gon 1 dong. Do lai khi font tai xong (font ve sau lam chu rong/hep khac luc dau).
+      '  function soDong(t) { var lh = parseFloat(getComputedStyle(t).lineHeight) || 1; return Math.round(t.getBoundingClientRect().height / lh); }',
+      '  function thuNho() {',
+      '    vua.forEach(function (v) {',
+      '      var t = v[0]; t.style.fontSize = "";',
+      '      if (!t.getBoundingClientRect().height) return; // dang an (popup) -> bo qua',
+      '      var co = parseFloat(getComputedStyle(t).fontSize), goc = co;',
+      '      while (soDong(t) > v[1] && co > goc * 0.6) { co -= 0.5; t.style.fontSize = co + "px"; }',
+      '    });',
+      '  }',
+      '  if (vua.length) {',
+      '    thuNho();',
+      '    if (document.fonts && document.fonts.ready) document.fonts.ready.then(thuNho);',
+      '    window.addEventListener("load", thuNho);',
+      '  }',
+      '  (D.opt || []).forEach(function (p) {',
+      '    tat("select[name=\\"" + p[0] + "\\"] option", function (e) { if (e.value === p[1]) e.textContent = p[2]; });',
+      '  });',
+      '})();</' + 'script>',
+    ].filter(Boolean).join('\n');
+  }
+
   function doiAnh(s, id, url, log) {
     var re = new RegExp('(#' + id + '\\s*>\\s*\\.ladi-image\\s*>\\s*\\.ladi-image-background\\{[^}]*background-image:\\s*url\\()([^)]*)(\\))');
     if (!re.test(s)) { if (log) log.push('  !! khong thay css anh ' + id); return s; }
@@ -720,6 +921,30 @@
     s = s.replace(/\n?<style id="style_ban_[\s\S]*?<\/style>\n?/, '');
     s = s.replace('</head>', css + '</head>');
 
+    // 11b. ban tieng Duc (?lang=de). Khong sinh them file: cung 1 trang, link co ?lang=de
+    // thi doan script ben duoi thay chu ngay luc tai. Chu nhap tu du-lieu.json (ten moc,
+    // dia diem, mau dresscode...) dich theo bang DICH_DE; gap chu chua co trong bang
+    // (vd admin vua doi ten moc) thi GIU NGUYEN tieng Viet thay vi de trong.
+    var de = bangDichDuc({
+      du: du, b: b, c: c, ma: ma, coDauTruoc: coDauTruoc, skChinh: skChinh, ddChinh: ddChinh,
+      ct: ct, mauCoTen: mauCoTen, tenTren: tenTren, tenDuoi: tenDuoi,
+    });
+    // phan intro chay NGAY sau khoi intro (khong de khach thay chu Viet thoang qua),
+    // phan than thiep chay cuoi <body> TRUOC khachJs — khachJs doc chu mac dinh cua
+    // HEADLINE15 ("Liebe Gäste") va ghi ten khach de len, nen phai dich truoc no.
+    var reHetIntro = /(<\/script>\n<\/div>)/;
+    var iIntro = s.indexOf('<div id="thiep-intro"');
+    if (iIntro >= 0) {
+      var sauIntro = s.slice(iIntro);
+      var mHet = reHetIntro.exec(sauIntro);
+      if (mHet) {
+        var viTri = iIntro + mHet.index + mHet[0].length;
+        s = s.slice(0, viTri) + jsDichDuc(de.intro, true) + s.slice(viTri);
+      }
+    }
+    log.push('ban tieng Duc (?lang=de): ' + de.than.h.length + ' khoi chu' +
+      (de.thieu.length ? ' — chua co ban dich, giu tieng Viet: ' + de.thieu.join(' | ') : ''));
+
     // 12. hien ten khach vao khung "Quy Khach" luc chay.
     // Ten NAM SAN trong link (?n=<base64url cua ten>) -> hien NGAY LAP TUC, khong cho
     // mang. Sau do, neu link co ?k=<ma khach> VA da noi Google Sheet, doi chieu lai o
@@ -816,7 +1041,7 @@
       ].join('\n');
       log.push('tu-co-chu ten moc dung 1 minh: ' + idNhanCanGiua.join(', '));
     }
-    s = thayChuoi(s, '</body>', khachJs + canGiuaJs + '</body>');
+    s = thayChuoi(s, '</body>', jsDichDuc(de.than, false) + khachJs + canGiuaJs + '</body>');
 
     // 13. ban XEM TRUOC trong admin: go nhac + go script form cua LadiPage (BUG-05, BUG-21).
     // Chi ap dung cho preview — file dang len link that KHONG bi dong toi.

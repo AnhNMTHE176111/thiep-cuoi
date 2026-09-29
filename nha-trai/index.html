@@ -187,7 +187,40 @@ filter:drop-shadow(0 3px 5px rgba(70,66,40,.32));}
   root.addEventListener("click", mo);
   root.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); mo(); } });
 })();</script>
-</div><script>window.THIEP_BAN="nha_trai";window.THIEP_RSVP_URL="https://script.google.com/macros/s/AKfycbwm6z-Aoi0ZunohGss-Uysgw4F9c3pTzqwHOLRHmdXjhr5rfnMD9NbH3bKvqdwsKTPQhA/exec";</script><script>(function(){
+</div><script>(function(){
+  var l = "";
+  try { l = (new URLSearchParams(location.search).get("lang") || "").toLowerCase(); } catch (e) {}
+  if (l.slice(0, 2) !== "de") return;
+  var D = {"q":[["#thiep-intro .ti-invite","Wir laden herzlich ein"],["#thiep-intro-khach","Liebe Gäste"],["#thiep-intro .ti-message","ZU UNSERER HOCHZEIT"],["#thiep-intro .ti-hint","Zum Öffnen tippen"]],"attr":[["#thiep-intro","aria-label","Tippen oder nach oben wischen, um die Einladung zu öffnen"]],"title":"Hochzeitseinladung Ngọc Đức & Hồng Thắm"};
+  document.documentElement.lang = "de"; window.THIEP_LANG = "de";
+  if (D.title) document.title = D.title;
+  var vua = [];
+  function tat(sel, f) { var ds = document.querySelectorAll(sel); for (var i = 0; i < ds.length; i++) f(ds[i]); }
+  (D.h || []).forEach(function (p) {
+    var w = document.getElementById(p[0]);
+    var t = w && (w.querySelector(".ladi-headline") || w);
+    if (t) { t.innerHTML = p[1]; if (p[1].length < 90) vua.push([t, p[1].split("<br>").filter(function (x) { return x.trim(); }).length || 1]); }
+  });
+  (D.q || []).forEach(function (p) { tat(p[0], function (e) { e.innerHTML = p[1]; }); });
+  (D.attr || []).forEach(function (p) { tat(p[0], function (e) { e.setAttribute(p[1], p[2]); }); });
+  function soDong(t) { var lh = parseFloat(getComputedStyle(t).lineHeight) || 1; return Math.round(t.getBoundingClientRect().height / lh); }
+  function thuNho() {
+    vua.forEach(function (v) {
+      var t = v[0]; t.style.fontSize = "";
+      if (!t.getBoundingClientRect().height) return; // dang an (popup) -> bo qua
+      var co = parseFloat(getComputedStyle(t).fontSize), goc = co;
+      while (soDong(t) > v[1] && co > goc * 0.6) { co -= 0.5; t.style.fontSize = co + "px"; }
+    });
+  }
+  if (vua.length) {
+    thuNho();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(thuNho);
+    window.addEventListener("load", thuNho);
+  }
+  (D.opt || []).forEach(function (p) {
+    tat("select[name=\"" + p[0] + "\"] option", function (e) { if (e.value === p[1]) e.textContent = p[2]; });
+  });
+})();</script><script>window.THIEP_BAN="nha_trai";window.THIEP_RSVP_URL="https://script.google.com/macros/s/AKfycbwm6z-Aoi0ZunohGss-Uysgw4F9c3pTzqwHOLRHmdXjhr5rfnMD9NbH3bKvqdwsKTPQhA/exec";</script><script>(function(){
   var RSVP_URL = "https://script.google.com/macros/s/AKfycbwm6z-Aoi0ZunohGss-Uysgw4F9c3pTzqwHOLRHmdXjhr5rfnMD9NbH3bKvqdwsKTPQhA/exec"; // sinh.js thay bang URL Google Apps Script that, rong = chua noi
   function onSubmit(e){
     var form = e.target;
@@ -567,6 +600,37 @@ filter:drop-shadow(0 3px 5px rgba(70,66,40,.32));}
 })();
 </script>
 <script>(function(){
+  var l = "";
+  try { l = (new URLSearchParams(location.search).get("lang") || "").toLowerCase(); } catch (e) {}
+  if (l.slice(0, 2) !== "de") return;
+  var D = {"h":[["HEADLINE12","wir laden herzlich ein"],["HEADLINE13","ZU UNSERER HOCHZEITSFEIER\u003cbr>IM KREISE UNSERER FAMILIEN"],["HEADLINE15","Liebe Gäste"],["HEADLINE16","STAR GALAXY"],["HEADLINE17","Hochzeitscenter · 4. Etage\u003cbr>87 Láng Hạ, Ba Đình, Hà Nội"],["HEADLINE20","( Mondkalender: 20.09. – Jahr des Feuer-Pferdes )"],["HEADLINE21","DONNERSTAG"],["HEADLINE55","29\u003cbr>Okt\u003cbr>2026"],["HEADLINE24","Route"],["HEADLINE27","BRÄUTIGAMSELTERN\u003cbr>Herr Trương Công Trường\u003cbr>Frau Đỗ Minh Ngọc"],["HEADLINE28","BRAUTELTERN\u003cbr>Herr Ngô Minh Hùng\u003cbr>Frau Nguyễn Thị Duyên"],["HEADLINE25","Zeitplan"],["HEADLINE26","ABLAUF DER FEIER"],["HEADLINE52","Forever"],["HEADLINE29","Dresscode"],["HEADLINE32","CHECK-IN &amp; FOTOS"],["HEADLINE34","TRAUUNG"],["HEADLINE36","FESTESSEN"],["HEADLINE38","BRAUTSTRAUSSWURF"],["HEADLINE39","Countdown"],["HEADLINE42","Tage"],["HEADLINE43","Stunden"],["HEADLINE44","Minuten"],["HEADLINE45","Sekunden"],["HEADLINE46","      „Aus zwei getrennten Wegen haben wir zueinander gefunden und beschlossen, gemeinsam eine Geschichte zu schreiben, die unsere Namen trägt. Wir wünschen uns nichts Großes – nur, dass wir von heute an jede Freude teilen, auf jedem Weg eine Hand zum Festhalten haben und jeder gewöhnliche Tag ein schöner Teil unseres Lebens wird.“"],["HEADLINE51","Sohn"],["HEADLINE65","Älteste Tochter"],["HEADLINE62","Bitte bestätigen Sie Ihre Teilnahme, damit wir Sie bestmöglich empfangen können. \u003cbr>Herzlichen Dank!\u003cbr>"],["HEADLINE63","Vielen Dank!"],["HEADLINE66","Danke für Ihre Rückmeldung\u003cbr>"],["HEADLINE67","Vielen Dank!\u003cbr>"],["BUTTON_TEXT2","BESTÄTIGEN"]],"q":[["#HEADLINE30 > .ladi-headline","\u003cspan style=\"display:inline-block;width:20px;height:20px;border-radius:50%;vertical-align:middle;margin:0 7px 5px 0;box-shadow:inset 0 0 0 1px rgba(142,124,105,.45);background:#F5EDE1\">\u003c/span>Creme · \u003cspan style=\"display:inline-block;width:20px;height:20px;border-radius:50%;vertical-align:middle;margin:0 7px 5px 0;box-shadow:inset 0 0 0 1px rgba(142,124,105,.45);background:#D8C4A8\">\u003c/span>Beige · \u003cspan style=\"display:inline-block;width:20px;height:20px;border-radius:50%;vertical-align:middle;margin:0 7px 5px 0;box-shadow:inset 0 0 0 1px rgba(142,124,105,.45);background:#8E7C69\">\u003c/span>Braun · \u003cspan style=\"display:inline-block;width:20px;height:20px;border-radius:50%;vertical-align:middle;margin:0 7px 5px 0;box-shadow:inset 0 0 0 1px rgba(142,124,105,.45);background:#E8B4B8\">\u003c/span>Rosa"],["#thiep-cam-on > div > div:nth-child(2)","Vielen Dank!"],["#thiep-cam-on > div > div:nth-child(3)","Ihre Glückwünsche sind bei uns angekommen. Wir freuen uns sehr auf Sie!"],["#thiep-cam-on button","Schließen"]],"attr":[["#FORM2 [name=\"name\"]","placeholder","Ihr Name"],["#FORM2 [name=\"message\"]","placeholder","Ihre Glückwünsche an das Brautpaar"],["#FORM2 [name=\"form_item9\"]","placeholder","Kommen Sie in Begleitung?"]],"opt":[["form_item8","","Nehmen Sie teil?"],["form_item8","Tôi sẽ tham dự","Ja, ich komme gerne"],["form_item8","Xin lỗi, tôi không thể tham dự","Leider kann ich nicht kommen"],["form_item10","","Sie sind Gast von …"],["form_item10","Khách mời cô dâu","Gast der Braut"],["form_item10","Khách mời chú rể","Gast des Bräutigams"]]};
+  var vua = [];
+  function tat(sel, f) { var ds = document.querySelectorAll(sel); for (var i = 0; i < ds.length; i++) f(ds[i]); }
+  (D.h || []).forEach(function (p) {
+    var w = document.getElementById(p[0]);
+    var t = w && (w.querySelector(".ladi-headline") || w);
+    if (t) { t.innerHTML = p[1]; if (p[1].length < 90) vua.push([t, p[1].split("<br>").filter(function (x) { return x.trim(); }).length || 1]); }
+  });
+  (D.q || []).forEach(function (p) { tat(p[0], function (e) { e.innerHTML = p[1]; }); });
+  (D.attr || []).forEach(function (p) { tat(p[0], function (e) { e.setAttribute(p[1], p[2]); }); });
+  function soDong(t) { var lh = parseFloat(getComputedStyle(t).lineHeight) || 1; return Math.round(t.getBoundingClientRect().height / lh); }
+  function thuNho() {
+    vua.forEach(function (v) {
+      var t = v[0]; t.style.fontSize = "";
+      if (!t.getBoundingClientRect().height) return; // dang an (popup) -> bo qua
+      var co = parseFloat(getComputedStyle(t).fontSize), goc = co;
+      while (soDong(t) > v[1] && co > goc * 0.6) { co -= 0.5; t.style.fontSize = co + "px"; }
+    });
+  }
+  if (vua.length) {
+    thuNho();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(thuNho);
+    window.addEventListener("load", thuNho);
+  }
+  (D.opt || []).forEach(function (p) {
+    tat("select[name=\"" + p[0] + "\"] option", function (e) { if (e.value === p[1]) e.textContent = p[2]; });
+  });
+})();</script><script>(function(){
   var qs = new URLSearchParams(location.search);
   var ma = qs.get("k");
   var nRaw = qs.get("n");

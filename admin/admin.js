@@ -57,6 +57,8 @@
     if (hienThi) q += '&n=' + b64UrlEncodeUtf8(hienThi);
     return gocThiep() + thuMuc + '/?' + q;
   }
+  // Ban tieng Duc: cung trang thiep, them ?lang=de la thiep tu doi chu sang tieng Duc.
+  function linkDuc(url) { return url + (url.indexOf('?') >= 0 ? '&' : '?') + 'lang=de'; }
 
   // ---------- tien ich chung ----------
   function layPath(obj, path) {
@@ -560,7 +562,8 @@
         el('div', {}, [el('b', {}, [ma === 'nha_trai' ? 'Nhà trai' : 'Nhà gái']), el('div', { class: 'muc-nho' }, [url])]),
       ]);
       var nutChep = el('button', { class: 'nut nho', type: 'button', onclick: function () { navigator.clipboard.writeText(url); thongBao('Đã chép link'); } }, ['Chép link']);
-      hang.appendChild(nutChep);
+      var nutDuc = el('button', { class: 'nut nho', type: 'button', title: 'Link thiệp tiếng Đức', onclick: function () { navigator.clipboard.writeText(linkDuc(url)); thongBao('Đã chép link tiếng Đức'); } }, ['🇩🇪 Tiếng Đức']);
+      hang.appendChild(el('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end' }, [nutChep, nutDuc]));
       khung.appendChild(hang);
     });
     cum.appendChild(khung);
@@ -1092,9 +1095,15 @@
       if (!k.daGui) { suaKhachTrenSheet(k, { daGui: true }, null, true); }
       thongBao('Đã chép link của ' + k.hienThi);
     } }, ['📋 Chép link']);
+    var nutChepDuc = el('button', { class: 'nut nho', type: 'button', disabled: (dangLuu || chuaRoBan) ? 'true' : null,
+      title: chuaRoBan ? 'Chọn Nhà trai hoặc Nhà gái ở góc trên thẻ này trước' : 'Chép link thiệp tiếng Đức', onclick: function () {
+      chepClipboardAnToan(linkDuc(url));
+      if (!k.daGui) { suaKhachTrenSheet(k, { daGui: true }, null, true); }
+      thongBao('Đã chép link tiếng Đức của ' + k.hienThi);
+    } }, ['🇩🇪']);
     var nutSua = el('button', { class: 'nut nho', type: 'button', disabled: dangLuu ? 'true' : null, onclick: function () { oHienThi.focus(); oHienThi.select(); } }, ['✏️']);
     var nutXoa = el('button', { class: 'nut nho nguy', type: 'button', disabled: dangLuu ? 'true' : null, onclick: function () { xoaKhachHoi(k); } }, ['🗑']);
-    hangDuoi.appendChild(nutChep); hangDuoi.appendChild(nutSua); hangDuoi.appendChild(nutXoa);
+    hangDuoi.appendChild(nutChep); hangDuoi.appendChild(nutChepDuc); hangDuoi.appendChild(nutSua); hangDuoi.appendChild(nutXoa);
     the.appendChild(hangDuoi);
     if (dangLuu) the.appendChild(el('p', { class: 'muc-nho', style: 'margin-top:4px' }, ['Đang lưu…']));
     return the;
