@@ -845,7 +845,7 @@
     var moTa = 'Trân trọng kính mời — ' + tenBan.toLowerCase() + ' — ' +
       thuTrongTuan(skChinh.ngayDuong).toLowerCase() + ' ' + ngayGon(skChinh.ngayDuong) +
       ' lúc ' + boThe(skChinh.gio) + ' tại ' + boThe(ddChinh.ten) + '.';
-    var gocWeb = String((du.web && du.web.gocThiep) || 'https://anhnmthe176111.github.io/thiep-cuoi/')
+    var gocWeb = String((du.web && du.web.gocThiep) || 'https://weddingductham.online/')
       .replace(/["'<>]/g, '').replace(/\/?$/, '/');
     var anhChiaSe = String(((du.anh || {})[DOI_ANH.IMAGE3[0]] || {}).url || '').replace(/["'<>]/g, '');
     // og:image BAT BUOC la URL tuyet doi: Zalo/Messenger khong giai duong dan tuong doi,
@@ -853,21 +853,19 @@
     if (anhChiaSe && !/^https?:\/\//i.test(anhChiaSe)) {
       anhChiaSe = gocWeb + anhChiaSe.replace(/^(?:\.\.\/|\.\/|\/)+/, '');
     }
-    var linkBan = gocWeb + (ma === 'nha_trai' ? 'nha-trai/' : 'nha-gai/');
     var theMeta = [
       '<meta name="description" content="' + escHtml(moTa) + '">',
       '<meta property="og:type" content="website">',
       '<meta property="og:site_name" content="' + tieuDe + '">',
       '<meta property="og:title" content="' + tieuDe + '">',
       '<meta property="og:description" content="' + escHtml(moTa) + '">',
-      '<meta property="og:url" content="' + linkBan + '">',
       '<meta property="og:locale" content="vi_VN">',
       '<meta name="twitter:card" content="summary_large_image">',
       '<meta name="twitter:title" content="' + tieuDe + '">',
       '<meta name="twitter:description" content="' + escHtml(moTa) + '">',
     ];
     if (anhChiaSe) {
-      theMeta.splice(6, 0, '<meta property="og:image" content="' + anhChiaSe + '">');
+      theMeta.splice(5, 0, '<meta property="og:image" content="' + anhChiaSe + '">');
       theMeta.push('<meta name="twitter:image" content="' + anhChiaSe + '">');
     }
     // don sach the do chinh sinh.js chen lan truoc (khi sinh lai tu mot file da sinh)
