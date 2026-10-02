@@ -29,7 +29,7 @@
   var GH_MAC_DINH = { owner: 'AnhNMTHE176111', repo: 'thiep-cuoi', branch: 'main' };
   // BUG-20: link thiep luon tro toi dia chi THAT tren GitHub Pages, khong suy ra tu location.href
   // (chay local thi '../nha-trai/' se 404 va lo chep nham link localhost cho khach).
-  var GOC_THIEP_MAC_DINH = 'https://anhnmthe176111.github.io/thiep-cuoi/';
+  var GOC_THIEP_MAC_DINH = 'https://weddingductham.online/';
   var KHOA_NHAP = 'thiep_nhap_v1';
   var DA_SUA = false;
   var DANG_TAI_BAN_DAU = true;
