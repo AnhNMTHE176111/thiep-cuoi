@@ -1004,11 +1004,22 @@
     } catch (e) {}
   }
 
+  // Khoa nut + hien spinner voi chu `nhan` trong luc cho; tra ve ham tra nut ve nhu cu.
+  function batQuay(nut, nhan) {
+    if (!nut) return function () {};
+    var cu = nut.textContent;
+    nut.disabled = true;
+    nut.textContent = '';
+    nut.appendChild(el('span', { class: 'quay' }));
+    nut.appendChild(document.createTextNode(nhan));
+    return function () { nut.disabled = false; nut.textContent = cu; };
+  }
+
   // them 1 khach hoac 1 loat khach (import) -> goi thang len Sheet, khong qua nhap tam.
   // maChepSan: ma do admin tao san va DA chep link ngay luc bam (xem nut "+ Them khach").
   // Safari/iPad chan chep clipboard neu goi sau khi phai cho mang tra loi.
   function themKhachLenSheet(dsMoi, oNut, maChepSan) {
-    if (oNut) oNut.disabled = true;
+    var traNut = batQuay(oNut, 'Đang thêm…');
     var maCu = khach.map(function (k) { return k.ma; });
     return luuKhachLenSheet(dsMoi).then(function (dsSauKhiLuu) {
       var vuaThem = dsSauKhiLuu.filter(function (k) { return maCu.indexOf(k.ma) < 0; });
@@ -1023,7 +1034,7 @@
     }).catch(function (e) {
       thongBao('Không lưu được: ' + e.message + (maChepSan ? ' — ĐỪNG gửi link vừa chép.' : ''), 'loi');
     }).finally(function () {
-      if (oNut) oNut.disabled = false;
+      traNut();
     });
   }
 
@@ -1035,6 +1046,7 @@
     Object.assign(k, patch);
     KHACH_DANG_LUU[k.ma] = true;
     if (oNut) oNut.disabled = true;
+    if (!imLang && cumHienTai === 'khach-moi') veCum('khach-moi'); // hien spinner "Dang luu..." tren the
     var gui = { ma: k.ma };
     Object.keys(patch).forEach(function (f) { gui[f] = patch[f]; });
     return luuKhachLenSheet([gui])
@@ -1045,7 +1057,7 @@
 
   function xoaKhachHoi(k) {
     if (!confirm('Xoá khách "' + k.hienThi + '"? Link đã gửi sẽ không còn hiển thị đúng tên nữa.')) return;
-    KHACH_DANG_LUU[k.ma] = true;
+    KHACH_DANG_LUU[k.ma] = 'xoa';
     if (cumHienTai === 'khach-moi') veCum('khach-moi');
     xoaKhachTrenSheet(k.ma).then(function () {
       thongBao('Đã xoá'); veLaiSauKhiDoiKhach();
@@ -1103,9 +1115,10 @@
     } }, ['🇩🇪 Chép link']);
     var nutSua = el('button', { class: 'nut nho', type: 'button', disabled: dangLuu ? 'true' : null, onclick: function () { oHienThi.focus(); oHienThi.select(); } }, ['✏️']);
     var nutXoa = el('button', { class: 'nut nho nguy', type: 'button', disabled: dangLuu ? 'true' : null, onclick: function () { xoaKhachHoi(k); } }, ['🗑']);
+    if (KHACH_DANG_LUU[k.ma] === 'xoa') batQuay(nutXoa, 'Đang xoá…');
     hangDuoi.appendChild(nutChep); hangDuoi.appendChild(nutChepDuc); hangDuoi.appendChild(nutSua); hangDuoi.appendChild(nutXoa);
     the.appendChild(hangDuoi);
-    if (dangLuu) the.appendChild(el('p', { class: 'muc-nho', style: 'margin-top:4px' }, ['Đang lưu…']));
+    if (dangLuu) the.appendChild(el('p', { class: 'muc-nho', style: 'margin-top:4px' }, [el('span', { class: 'quay' }), KHACH_DANG_LUU[k.ma] === 'xoa' ? 'Đang xoá…' : 'Đang lưu…']));
     return the;
   }
 
@@ -1296,8 +1309,9 @@
       (function () {
         var wrap = el('div');
         var trangThai = el('p', { class: 'trang-thai-ket-noi' });
-        wrap.appendChild(el('button', { class: 'nut nho', type: 'button', onclick: function () {
+        var nutKiemTra = el('button', { class: 'nut nho', type: 'button', onclick: function () {
           trangThai.innerHTML = ''; trangThai.appendChild(el('span', {}, ['Đang kiểm tra…']));
+          var traNutKt = batQuay(nutKiemTra, 'Đang kiểm tra…');
           kiemTraKetNoiKhach().then(function (kq) {
             // KHONG goi veCum(cumHienTai) o day: no ve lai CA cum "Cai dat" tu dau, xoa
             // mat luon dong "Da ket noi" vua hien (tao lai trangThai moi, rong trang).
@@ -1308,8 +1322,9 @@
             trangThai.innerHTML = '';
             trangThai.appendChild(el('span', { class: 'cham' }));
             trangThai.appendChild(el('span', {}, ['⚠️ ' + e.message]));
-          });
-        } }, ['Kiểm tra kết nối']));
+          }).finally(traNutKt);
+        } }, ['Kiểm tra kết nối']);
+        wrap.appendChild(nutKiemTra);
         wrap.appendChild(trangThai);
         return wrap;
       })(),
@@ -1410,7 +1425,7 @@
     if (!confirm(hoi.join('\n'))) { thongBao('Đã huỷ — chưa đăng gì cả.'); return; }
 
     var nut = document.getElementById('nutDang');
-    nut.disabled = true; nut.textContent = 'Đang đăng...';
+    var traNutDang = batQuay(nut, 'Đang đăng…');
     var luc = new Date().toLocaleString('vi-VN');
     // Tung file mot: moi PUT la 1 commit tren cung nhanh, chay song song thi GitHub
     // tu choi commit den sau ("is at ... but expected ...").
@@ -1429,7 +1444,7 @@
     }).catch(function (e) {
       thongBao('Đăng thất bại: ' + e.message, 'loi');
     }).finally(function () {
-      nut.disabled = false; nut.textContent = 'Đăng lên link thật';
+      traNutDang();
     });
   }
 
